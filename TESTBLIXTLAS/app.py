@@ -1,8 +1,9 @@
-﻿from flask import Flask, request, jsonify, render_template_string
+﻿
+from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
 
-# 10 recept med instruktioner
+# Recept med ingredienser + instruktioner
 RECIPES = [
     {"id": 1, "title": "Stekt ris med kyckling",
      "ingredients": ["kokt ris", "kyckling", "ägg", "soja", "morot", "lök"],
@@ -120,7 +121,9 @@ HTML_PAGE = """
     .matched { color: #27ae60; }
     .details { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; }
     .details.open { max-height: 600px; transition: max-height 0.8s ease-in; }
-    ul { padding-left: 20px; }
+    ul { padding-left: 20px; list-style-type: none; }
+    li { margin: 5px 0; }
+    label { cursor: pointer; }
   </style>
 </head>
 <body>
@@ -157,10 +160,10 @@ async function findRecipes() {
     const div = document.createElement("div");
     div.className = "recipe";
 
-    // Instruktionslista
+    // Instruktionslista med checkboxar
     let instrList = "<ul>";
-    r.instructions.forEach(step => {
-      instrList += `<li>${step}</li>`;
+    r.instructions.forEach((step, idx) => {
+      instrList += `<li><label><input type='checkbox'> ${step}</label></li>`;
     });
     instrList += "</ul>";
 
@@ -204,7 +207,7 @@ async function getShopping(recipeId) {
   ul.innerHTML = "";
   data.shopping_list.forEach(item => {
     const li = document.createElement("li");
-    li.textContent = item;
+    li.innerHTML = `<label><input type='checkbox'> ${item}</label>`;
     ul.appendChild(li);
   });
 }
@@ -242,4 +245,5 @@ def shoppinglist_endpoint():
 
 if __name__ == "__main__":
     app.run(host="localhost", debug=True)
+
 
