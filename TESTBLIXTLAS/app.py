@@ -1,5 +1,4 @@
-﻿
-from flask import Flask, request, jsonify, render_template_string
+﻿from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
 
@@ -121,9 +120,10 @@ HTML_PAGE = """
     .matched { color: #27ae60; }
     .details { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; }
     .details.open { max-height: 600px; transition: max-height 0.8s ease-in; }
-    ul { padding-left: 20px; list-style-type: none; }
+    ol, ul { padding-left: 20px; }
     li { margin: 5px 0; }
     label { cursor: pointer; }
+    .done { text-decoration: line-through; color: gray; }
   </style>
 </head>
 <body>
@@ -160,12 +160,17 @@ async function findRecipes() {
     const div = document.createElement("div");
     div.className = "recipe";
 
-    // Instruktionslista med checkboxar
-    let instrList = "<ul>";
+    // Instruktionslista med checkboxar (numrerad)
+    let instrList = "<ol>";
     r.instructions.forEach((step, idx) => {
-      instrList += `<li><label><input type='checkbox'> ${step}</label></li>`;
+      instrList += `
+        <li>
+          <label>
+            <input type='checkbox' onchange="toggleDone(this)"> ${step}
+          </label>
+        </li>`;
     });
-    instrList += "</ul>";
+    instrList += "</ol>";
 
     // Skapa detaljer-sektion (instruktioner + inköpslista)
     div.innerHTML = `
@@ -207,9 +212,18 @@ async function getShopping(recipeId) {
   ul.innerHTML = "";
   data.shopping_list.forEach(item => {
     const li = document.createElement("li");
-    li.innerHTML = `<label><input type='checkbox'> ${item}</label>`;
+    li.innerHTML = `<label><input type='checkbox' onchange="toggleDone(this)"> ${item}</label>`;
     ul.appendChild(li);
   });
+}
+
+function toggleDone(checkbox) {
+  const label = checkbox.parentNode;
+  if (checkbox.checked) {
+    label.classList.add("done");
+  } else {
+    label.classList.remove("done");
+  }
 }
 </script>
 </body>
@@ -245,5 +259,4 @@ def shoppinglist_endpoint():
 
 if __name__ == "__main__":
     app.run(host="localhost", debug=True)
-
 
