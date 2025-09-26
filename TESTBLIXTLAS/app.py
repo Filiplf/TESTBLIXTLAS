@@ -2,28 +2,83 @@
 
 app = Flask(__name__)
 
-# Enkel "databas" med 10 recept
+# 10 recept med instruktioner
 RECIPES = [
     {"id": 1, "title": "Stekt ris med kyckling",
-     "ingredients": ["kokt ris", "kyckling", "ägg", "soja", "morot", "lök"]},
+     "ingredients": ["kokt ris", "kyckling", "ägg", "soja", "morot", "lök"],
+     "instructions": [
+         "Skär kycklingen i bitar och stek tills den är genomstekt.",
+         "Tillsätt hackad lök och morot, fräs i några minuter.",
+         "Knäck i ägg och rör om.",
+         "Blanda i ris och soja, stek tills allt är varmt."
+     ]},
     {"id": 2, "title": "Tomat- och linsgryta",
-     "ingredients": ["linser", "tomat", "lök", "vitlök", "spiskummin"]},
+     "ingredients": ["linser", "tomat", "lök", "vitlök", "spiskummin"],
+     "instructions": [
+         "Fräs lök och vitlök i lite olja.",
+         "Tillsätt tomat och kryddor.",
+         "Häll i linser och vatten, låt koka tills linserna är mjuka."
+     ]},
     {"id": 3, "title": "Omelett med grönsaker",
-     "ingredients": ["ägg", "lök", "spenat", "ost", "salt", "peppar"]},
+     "ingredients": ["ägg", "lök", "spenat", "ost", "salt", "peppar"],
+     "instructions": [
+         "Vispa äggen med salt och peppar.",
+         "Stek lök och spenat lätt i panna.",
+         "Häll över äggsmeten och toppa med ost.",
+         "Stek på låg värme tills omeletten är klar."
+     ]},
     {"id": 4, "title": "Pasta carbonara",
-     "ingredients": ["pasta", "ägg", "grädde", "bacon", "parmesan", "svartpeppar"]},
+     "ingredients": ["pasta", "ägg", "grädde", "bacon", "parmesan", "svartpeppar"],
+     "instructions": [
+         "Koka pastan.",
+         "Stek bacon knaprigt.",
+         "Vispa ihop ägg, grädde och parmesan.",
+         "Blanda allt med pastan och krydda med svartpeppar."
+     ]},
     {"id": 5, "title": "Köttfärssås",
-     "ingredients": ["spaghetti", "köttfärs", "lök", "vitlök", "tomat", "oregano"]},
+     "ingredients": ["spaghetti", "köttfärs", "lök", "vitlök", "tomat", "oregano"],
+     "instructions": [
+         "Koka spaghetti enligt anvisning.",
+         "Fräs lök och vitlök i olja.",
+         "Tillsätt köttfärs och bryn.",
+         "Blanda i tomat och oregano, låt puttra."
+     ]},
     {"id": 6, "title": "Fiskpinnar med potatis",
-     "ingredients": ["fiskpinnar", "potatis", "smör", "citron", "ärtor"]},
+     "ingredients": ["fiskpinnar", "potatis", "smör", "citron", "ärtor"],
+     "instructions": [
+         "Koka potatis och ärtor.",
+         "Stek fiskpinnarna tills de är gyllenbruna.",
+         "Servera med smör och en citronklyfta."
+     ]},
     {"id": 7, "title": "Grillad ostmacka",
-     "ingredients": ["bröd", "ost", "smör"]},
+     "ingredients": ["bröd", "ost", "smör"],
+     "instructions": [
+         "Bred smör på brödet.",
+         "Lägg ost mellan två skivor bröd.",
+         "Grilla i panna tills brödet är gyllene och osten smält."
+     ]},
     {"id": 8, "title": "Kycklingsallad",
-     "ingredients": ["kyckling", "sallad", "tomat", "gurka", "olivolja"]},
+     "ingredients": ["kyckling", "sallad", "tomat", "gurka", "olivolja"],
+     "instructions": [
+         "Stek eller grilla kycklingen och skär i skivor.",
+         "Blanda sallad, tomat och gurka i en skål.",
+         "Toppa med kyckling och ringla över olivolja."
+     ]},
     {"id": 9, "title": "Ugnspannkaka",
-     "ingredients": ["ägg", "mjöl", "mjölk", "salt", "bacon"]},
+     "ingredients": ["ägg", "mjöl", "mjölk", "salt", "bacon"],
+     "instructions": [
+         "Vispa ihop ägg, mjöl, mjölk och salt.",
+         "Häll smeten i en smord ugnsform.",
+         "Lägg på bacon och grädda i ugnen tills gyllene."
+     ]},
     {"id": 10, "title": "Soppa på rotfrukter",
-     "ingredients": ["morot", "palsternacka", "potatis", "lök", "buljong"]}
+     "ingredients": ["morot", "palsternacka", "potatis", "lök", "buljong"],
+     "instructions": [
+         "Skala och tärna rotfrukterna.",
+         "Fräs lök i lite olja.",
+         "Tillsätt rotfrukter och buljong, koka tills mjuka.",
+         "Mixa soppan slät eller servera som bitar."
+     ]}
 ]
 
 def match_recipes(pantry, leftovers, top_n=5):
@@ -43,12 +98,13 @@ def match_recipes(pantry, leftovers, top_n=5):
             "title": r["title"],
             "score": round(final_score, 3),
             "matched": matched,
-            "missing": missing
+            "missing": missing,
+            "instructions": r["instructions"]
         })
     results.sort(key=lambda x: x["score"], reverse=True)
     return results[:top_n]
 
-# ---- HTML + JS direkt i koden ----
+# ---- HTML + JS ----
 HTML_PAGE = """
 <!DOCTYPE html>
 <html lang="sv">
@@ -62,6 +118,9 @@ HTML_PAGE = """
     .recipe { border: 1px solid #ccc; padding: 10px; margin: 10px 0; border-radius: 8px; }
     .missing { color: #c0392b; }
     .matched { color: #27ae60; }
+    .details { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; }
+    .details.open { max-height: 600px; transition: max-height 0.8s ease-in; }
+    ul { padding-left: 20px; }
   </style>
 </head>
 <body>
@@ -78,9 +137,6 @@ HTML_PAGE = """
 
   <h2>Förslag:</h2>
   <div id="results"></div>
-
-  <h2>Inköpslista:</h2>
-  <ul id="shopping"></ul>
 
 <script>
 async function findRecipes() {
@@ -100,14 +156,37 @@ async function findRecipes() {
   data.forEach(r => {
     const div = document.createElement("div");
     div.className = "recipe";
+
+    // Instruktionslista
+    let instrList = "<ul>";
+    r.instructions.forEach(step => {
+      instrList += `<li>${step}</li>`;
+    });
+    instrList += "</ul>";
+
+    // Skapa detaljer-sektion (instruktioner + inköpslista)
     div.innerHTML = `
       <h3>${r.title} (score ${r.score})</h3>
       <p class="matched">Har redan: ${r.matched.join(", ") || "–"}</p>
       <p class="missing">Saknas: ${r.missing.join(", ") || "–"}</p>
-      <button onclick="getShopping(${r.id})">Få inköpslista</button>
+      <button onclick="toggleDetails(${r.id})">Visa detaljer</button>
+      <div id="details-${r.id}" class="details">
+        <h4>Instruktioner</h4>
+        ${instrList}
+        <h4>Inköpslista</h4>
+        <ul id="shopping-${r.id}"><li>Laddar...</li></ul>
+      </div>
     `;
     resultsDiv.appendChild(div);
+
+    // Ladda inköpslista direkt (så den visas när man öppnar)
+    getShopping(r.id);
   });
+}
+
+function toggleDetails(id) {
+  const div = document.getElementById("details-" + id);
+  div.classList.toggle("open");
 }
 
 async function getShopping(recipeId) {
@@ -121,7 +200,7 @@ async function getShopping(recipeId) {
   });
   const data = await res.json();
 
-  const ul = document.getElementById("shopping");
+  const ul = document.getElementById("shopping-" + recipeId);
   ul.innerHTML = "";
   data.shopping_list.forEach(item => {
     const li = document.createElement("li");
@@ -163,3 +242,4 @@ def shoppinglist_endpoint():
 
 if __name__ == "__main__":
     app.run(host="localhost", debug=True)
+
