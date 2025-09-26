@@ -1,18 +1,19 @@
-﻿from flask import Flask, request, jsonify, render_template_string
+﻿
+from flask import Flask, request, jsonify, render_template_string
 
 app = Flask(__name__)
 
-# Recept med ingredienser + instruktioner
+# Recept (samma som innan, ej förkortat här för tydlighet)
 RECIPES = [
     {"id": 1, "title": "Stekt ris med kyckling",
-     "ingredients": ["kokt ris", "kyckling", "ägg", "soja", "morot", "lök"],
+     "ingredients": ["ris", "kyckling", "ägg", "soja", "morot", "lök"],
      "instructions": [
          "Skär kycklingen i bitar och stek tills den är genomstekt.",
          "Tillsätt hackad lök och morot, fräs i några minuter.",
          "Knäck i ägg och rör om.",
          "Blanda i ris och soja, stek tills allt är varmt."
      ]},
-    {"id": 2, "title": "Tomat- och linsgryta",
+        {"id": 2, "title": "Tomat- och linsgryta",
      "ingredients": ["linser", "tomat", "lök", "vitlök", "spiskummin"],
      "instructions": [
          "Fräs lök och vitlök i lite olja.",
@@ -79,6 +80,8 @@ RECIPES = [
          "Tillsätt rotfrukter och buljong, koka tills mjuka.",
          "Mixa soppan slät eller servera som bitar."
      ]}
+
+    # ... resten av recepten oförändrade ...
 ]
 
 def match_recipes(pantry, leftovers, top_n=5):
@@ -131,10 +134,10 @@ HTML_PAGE = """
   <p>Skriv in vad du har hemma:</p>
 
   <label>Skafferi (komma-separerat):</label><br>
-  <input type="text" id="pantry" size="60" value="lök, soja"><br>
+  <input type="text" id="pantry" size="60"><br>
 
   <label>Rester (komma-separerat):</label><br>
-  <input type="text" id="leftovers" size="60" value="kokt ris, kyckling"><br><br>
+  <input type="text" id="leftovers" size="60"><br><br>
 
   <button onclick="findRecipes()">Hitta recept</button>
 
@@ -142,7 +145,19 @@ HTML_PAGE = """
   <div id="results"></div>
 
 <script>
+// === LocalStorage för Skafferi & Rester ===
+function saveInputs() {
+  localStorage.setItem("pantry", document.getElementById("pantry").value);
+  localStorage.setItem("leftovers", document.getElementById("leftovers").value);
+}
+function loadInputs() {
+  document.getElementById("pantry").value = localStorage.getItem("pantry") || "";
+  document.getElementById("leftovers").value = localStorage.getItem("leftovers") || "";
+}
+
+// === Hämta recept ===
 async function findRecipes() {
+  saveInputs(); // spara direkt vid sökning
   const pantry = document.getElementById("pantry").value.split(",").map(x=>x.trim());
   const leftovers = document.getElementById("leftovers").value.split(",").map(x=>x.trim());
 
@@ -160,19 +175,21 @@ async function findRecipes() {
     const div = document.createElement("div");
     div.className = "recipe";
 
-    // Instruktionslista med checkboxar (numrerad)
+    // Instruktionslista
     let instrList = "<ol>";
     r.instructions.forEach((step, idx) => {
+      const key = "recipe-" + r.id + "-step-" + idx;
+      const checked = localStorage.getItem(key) === "true" ? "checked" : "";
+      const doneClass = checked ? "done" : "";
       instrList += `
-        <li>
+        <li class="${doneClass}">
           <label>
-            <input type='checkbox' onchange="toggleDone(this)"> ${step}
+            <input type='checkbox' ${checked} onchange="toggleDone(this, '${key}')"> ${step}
           </label>
         </li>`;
     });
     instrList += "</ol>";
 
-    // Skapa detaljer-sektion (instruktioner + inköpslista)
     div.innerHTML = `
       <h3>${r.title} (score ${r.score})</h3>
       <p class="matched">Har redan: ${r.matched.join(", ") || "–"}</p>
@@ -187,16 +204,18 @@ async function findRecipes() {
     `;
     resultsDiv.appendChild(div);
 
-    // Ladda inköpslista direkt (så den visas när man öppnar)
+    // Ladda inköpslista
     getShopping(r.id);
   });
 }
 
+// === Expandera sektion ===
 function toggleDetails(id) {
   const div = document.getElementById("details-" + id);
   div.classList.toggle("open");
 }
 
+// === Inköpslista ===
 async function getShopping(recipeId) {
   const pantry = document.getElementById("pantry").value.split(",").map(x=>x.trim());
   const leftovers = document.getElementById("leftovers").value.split(",").map(x=>x.trim());
@@ -210,21 +229,35 @@ async function getShopping(recipeId) {
 
   const ul = document.getElementById("shopping-" + recipeId);
   ul.innerHTML = "";
-  data.shopping_list.forEach(item => {
+  data.shopping_list.forEach((item, idx) => {
+    const key = "recipe-" + recipeId + "-shop-" + idx;
+    const checked = localStorage.getItem(key) === "true" ? "checked" : "";
+    const doneClass = checked ? "done" : "";
     const li = document.createElement("li");
-    li.innerHTML = `<label><input type='checkbox' onchange="toggleDone(this)"> ${item}</label>`;
+    li.className = doneClass;
+    li.innerHTML = `<label><input type='checkbox' ${checked} onchange="toggleDone(this, '${key}')"> ${item}</label>`;
     ul.appendChild(li);
   });
 }
 
-function toggleDone(checkbox) {
+// === Överstrykning + spara ===
+function toggleDone(checkbox, key) {
   const label = checkbox.parentNode;
   if (checkbox.checked) {
     label.classList.add("done");
+    localStorage.setItem(key, "true");
   } else {
     label.classList.remove("done");
+    localStorage.setItem(key, "false");
   }
 }
+
+// === Init ===
+window.onload = function() {
+  loadInputs();
+  document.getElementById("pantry").addEventListener("input", saveInputs);
+  document.getElementById("leftovers").addEventListener("input", saveInputs);
+};
 </script>
 </body>
 </html>
@@ -259,4 +292,5 @@ def shoppinglist_endpoint():
 
 if __name__ == "__main__":
     app.run(host="localhost", debug=True)
+
 
