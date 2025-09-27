@@ -140,9 +140,12 @@ HTML_PAGE = """
   <input type="text" id="leftovers" size="60"><br><br>
 
   <button onclick="findRecipes()">Hitta recept</button>
+  <button onclick="clearAll()">Rensa allt sparat</button>
+  <button onclick="clearCheckboxes()">Rensa bara checkboxar</button>
 
   <h2>Förslag:</h2>
   <div id="results"></div>
+
 
 <script>
 // === LocalStorage för Skafferi & Rester ===
@@ -154,6 +157,31 @@ function loadInputs() {
   document.getElementById("pantry").value = localStorage.getItem("pantry") || "";
   document.getElementById("leftovers").value = localStorage.getItem("leftovers") || "";
 }
+
+// === Rensa allt sparat ===
+function clearAll() {
+  if (confirm("Är du säker på att du vill rensa ALLT (skafferi, rester & checkboxar)?")) {
+    localStorage.clear();
+    location.reload();
+  }
+}
+
+// === Rensa bara checkboxar ===
+function clearCheckboxes() {
+  if (confirm("Rensa bara checkboxar (instruktioner & inköpslista), men behåll Skafferi och Rester?")) {
+    const keysToKeep = ["pantry", "leftovers"];
+    const savedPantry = localStorage.getItem("pantry");
+    const savedLeftovers = localStorage.getItem("leftovers");
+
+    localStorage.clear();
+
+    if (savedPantry !== null) localStorage.setItem("pantry", savedPantry);
+    if (savedLeftovers !== null) localStorage.setItem("leftovers", savedLeftovers);
+
+    location.reload();
+  }
+}
+
 
 // === Hämta recept ===
 async function findRecipes() {
@@ -291,6 +319,6 @@ def shoppinglist_endpoint():
     return jsonify({"recipe": recipe["title"], "shopping_list": missing})
 
 if __name__ == "__main__":
-    app.run(host="localhost", debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
 
 
