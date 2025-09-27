@@ -80,8 +80,6 @@ RECIPES = [
          "Tillsätt rotfrukter och buljong, koka tills mjuka.",
          "Mixa soppan slät eller servera som bitar."
      ]}
-
-    # ... resten av recepten oförändrade ...
 ]
 
 def match_recipes(pantry, leftovers, top_n=5):
