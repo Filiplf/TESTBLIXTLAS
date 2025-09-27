@@ -1,9 +1,5 @@
 ﻿from flask import Flask, request, jsonify, render_template_string
 app = Flask(__name__)
-import webbrowser
-import platform
-from threading import Timer
-import subprocess
 
 RECIPES = [
     {"id": 1, "title": "Stekt ris med kyckling",
@@ -317,23 +313,7 @@ def shoppinglist_endpoint():
     missing = [i for i in recipe["ingredients"] if i.lower() not in have]
     return jsonify({"recipe": recipe["title"], "shopping_list": missing})
 
-def open_browser(url):
-    system = platform.system()
-    try:
-        if system == "Linux":
-            # Use xdg-open on Linux (works on Raspberry Pi)
-            subprocess.Popen(["xdg-open", url])
-        else:
-            # Default method for Windows/macOS
-            webbrowser.open(url)
-    except Exception as e:
-        print(f"Could not open browser automatically: {e}")
-
 if __name__ == "__main__":
-    port = 5000
-    url = f"http://127.0.0.1:{port}/"
+    app.run(host="0.0.0.0", port=5000, debug=True)
 
-    # Open the browser shortly after server starts
-    Timer(1, lambda: open_browser(url)).start()
 
-    app.run(host="0.0.0.0", port=port, debug=True, use_reloader=False)
