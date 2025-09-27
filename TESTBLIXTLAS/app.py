@@ -1,9 +1,6 @@
-﻿
-from flask import Flask, request, jsonify, render_template_string
-
+﻿from flask import Flask, request, jsonify, render_template_string
 app = Flask(__name__)
 
-# Recept (samma som innan, ej förkortat här för tydlighet)
 RECIPES = [
     {"id": 1, "title": "Stekt ris med kyckling",
      "ingredients": ["ris", "kyckling", "ägg", "soja", "morot", "lök"],
