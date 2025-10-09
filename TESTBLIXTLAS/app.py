@@ -2,103 +2,61 @@
 app = Flask(__name__)
 
 RECIPES = [
-    {"id": 1, "title": "Stekt ris med kyckling",
-     "ingredients": ["ris", "kyckling", "ägg", "soja", "morot", "lök"],
-     "instructions": [
-         "Skär kycklingen i bitar och stek tills den är genomstekt.",
-         "Tillsätt hackad lök och morot, fräs i några minuter.",
-         "Knäck i ägg och rör om.",
-         "Blanda i ris och soja, stek tills allt är varmt."
-     ]},
-        {"id": 2, "title": "Tomat- och linsgryta",
-     "ingredients": ["linser", "tomat", "lök", "vitlök", "spiskummin"],
-     "instructions": [
-         "Fräs lök och vitlök i lite olja.",
-         "Tillsätt tomat och kryddor.",
-         "Häll i linser och vatten, låt koka tills linserna är mjuka."
-     ]},
-    {"id": 3, "title": "Omelett med grönsaker",
-     "ingredients": ["ägg", "lök", "spenat", "ost", "salt", "peppar"],
-     "instructions": [
-         "Vispa äggen med salt och peppar.",
-         "Stek lök och spenat lätt i panna.",
-         "Häll över äggsmeten och toppa med ost.",
-         "Stek på låg värme tills omeletten är klar."
-     ]},
-    {"id": 4, "title": "Pasta carbonara",
-     "ingredients": ["pasta", "ägg", "grädde", "bacon", "parmesan", "svartpeppar"],
-     "instructions": [
-         "Koka pastan.",
-         "Stek bacon knaprigt.",
-         "Vispa ihop ägg, grädde och parmesan.",
-         "Blanda allt med pastan och krydda med svartpeppar."
-     ]},
-    {"id": 5, "title": "Köttfärssås",
-     "ingredients": ["spaghetti", "köttfärs", "lök", "vitlök", "tomat", "oregano"],
-     "instructions": [
-         "Koka spaghetti enligt anvisning.",
-         "Fräs lök och vitlök i olja.",
-         "Tillsätt köttfärs och bryn.",
-         "Blanda i tomat och oregano, låt puttra."
-     ]},
-    {"id": 6, "title": "Fiskpinnar med potatis",
-     "ingredients": ["fiskpinnar", "potatis", "smör", "citron", "ärtor"],
-     "instructions": [
-         "Koka potatis och ärtor.",
-         "Stek fiskpinnarna tills de är gyllenbruna.",
-         "Servera med smör och en citronklyfta."
-     ]},
-    {"id": 7, "title": "Grillad ostmacka",
-     "ingredients": ["bröd", "ost", "smör"],
-     "instructions": [
-         "Bred smör på brödet.",
-         "Lägg ost mellan två skivor bröd.",
-         "Grilla i panna tills brödet är gyllene och osten smält."
-     ]},
-    {"id": 8, "title": "Kycklingsallad",
-     "ingredients": ["kyckling", "sallad", "tomat", "gurka", "olivolja"],
-     "instructions": [
-         "Stek eller grilla kycklingen och skär i skivor.",
-         "Blanda sallad, tomat och gurka i en skål.",
-         "Toppa med kyckling och ringla över olivolja."
-     ]},
-    {"id": 9, "title": "Ugnspannkaka",
-     "ingredients": ["ägg", "mjöl", "mjölk", "salt", "bacon"],
-     "instructions": [
-         "Vispa ihop ägg, mjöl, mjölk och salt.",
-         "Häll smeten i en smord ugnsform.",
-         "Lägg på bacon och grädda i ugnen tills gyllene."
-     ]},
-    {"id": 10, "title": "Soppa på rotfrukter",
-     "ingredients": ["morot", "palsternacka", "potatis", "lök", "buljong"],
-     "instructions": [
-         "Skala och tärna rotfrukterna.",
-         "Fräs lök i lite olja.",
-         "Tillsätt rotfrukter och buljong, koka tills mjuka.",
-         "Mixa soppan slät eller servera som bitar."
-     ]}
+    {
+        "id": 1,
+        "title": "Stekt ris med kyckling",
+        "required_ingredients": ["ris", "kyckling", "ägg"],
+        "optional_ingredients": ["soja", "morot", "lök"],
+        "instructions": [
+            "Skär kycklingen i bitar och stek tills den är genomstekt.",
+            "Tillsätt hackad lök och morot, fräs i några minuter.",
+            "Knäck i ägg och rör om.",
+            "Blanda i ris och soja, stek tills allt är varmt."
+        ]
+    },
+    {
+        "id": 2,
+        "title": "Tomat- och linsgryta",
+        "required_ingredients": ["linser", "tomat"],
+        "optional_ingredients": ["lök", "vitlök", "spiskummin"],
+        "instructions": [
+            "Fräs lök och vitlök i lite olja.",
+            "Tillsätt tomat och kryddor.",
+            "Häll i linser och vatten, låt koka tills linserna är mjuka."
+        ]
+    },
+    # ...osv
 ]
 
 def match_recipes(pantry, leftovers, top_n=5):
     have = set([i.strip().lower() for i in pantry + leftovers])
     results = []
+
     for r in RECIPES:
-        reqs = [i.strip().lower() for i in r["ingredients"]]
-        matched = [i for i in reqs if i in have]
-        missing = [i for i in reqs if i not in have]
-        num_matched = len(matched)
-        total = len(reqs)
-        match_score = num_matched / total if total > 0 else 0
-        penalty = len(missing) * 0.05
-        final_score = match_score - penalty
+        req = [i.lower() for i in r.get("required_ingredients", [])]
+        opt = [i.lower() for i in r.get("optional_ingredients", [])]
+
+        matched_req = [i for i in req if i in have]
+        missing_req = [i for i in req if i not in have]
+
+
+        matched_opt = [i for i in opt if i in have]
+        missing_opt = [i for i in opt if i not in have]
+
+        # enkel poäng baserad på hur många extra ingredienser du har
+        score = len(matched_opt) / max(len(opt), 1)
+
         results.append({
             "id": r["id"],
             "title": r["title"],
-            "score": round(final_score, 3),
-            "matched": matched,
-            "missing": missing,
+            "score": round(score, 3),
+            "matched_required": matched_req,
+            "matched_optional": matched_opt,
+            "missing_required": missing_req,
+            "missing_optional": missing_opt,
             "instructions": r["instructions"]
         })
+
     results.sort(key=lambda x: x["score"], reverse=True)
     return results[:top_n]
 
@@ -215,8 +173,10 @@ async function findRecipes() {
 
     div.innerHTML = `
       <h3>${r.title} (score ${r.score})</h3>
-      <p class="matched">Har redan: ${r.matched.join(", ") || "–"}</p>
-      <p class="missing">Saknas: ${r.missing.join(", ") || "–"}</p>
+      <p class="matched">Obligatoriska du har: ${r.matched_required.join(", ") || "–"}</p>  
+      <p class="matched">Extra du har: ${r.matched_optional.join(", ") || "–"}</p>
+      <p class="missing">Obligatoriska som saknas: ${r.missing_required.join(", ") || "–"}</p>
+      <p class="missing">Extra som saknas: ${r.missing_optional.join(", ") || "–"}</p>
       <button onclick="toggleDetails(${r.id})">Visa detaljer</button>
       <div id="details-${r.id}" class="details">
         <h4>Instruktioner</h4>
@@ -252,16 +212,46 @@ async function getShopping(recipeId) {
 
   const ul = document.getElementById("shopping-" + recipeId);
   ul.innerHTML = "";
-  data.shopping_list.forEach((item, idx) => {
-    const key = "recipe-" + recipeId + "-shop-" + idx;
-    const checked = localStorage.getItem(key) === "true" ? "checked" : "";
-    const doneClass = checked ? "done" : "";
-    const li = document.createElement("li");
-    li.className = doneClass;
-    li.innerHTML = `<label><input type='checkbox' ${checked} onchange="toggleDone(this, '${key}')"> ${item}</label>`;
-    ul.appendChild(li);
-  });
+
+  const req = data.shopping_list.required;
+  const opt = data.shopping_list.optional;
+
+  if (req.length === 0 && opt.length === 0) {
+    ul.innerHTML = "<li>Du har allt du behöver! ✅</li>";
+    return;
+  }
+
+  if (req.length > 0) {
+    const header = document.createElement("li");
+    header.innerHTML = "<strong>Obligatoriskt att köpa:</strong>";
+    ul.appendChild(header);
+    req.forEach((item, idx) => {
+      const key = `recipe-${recipeId}-req-${idx}`;
+      const checked = localStorage.getItem(key) === "true" ? "checked" : "";
+      const doneClass = checked ? "done" : "";
+      const li = document.createElement("li");
+      li.className = doneClass;
+      li.innerHTML = `<label><input type='checkbox' ${checked} onchange="toggleDone(this, '${key}')"> ${item}</label>`;
+      ul.appendChild(li);
+    });
+  }
+
+  if (opt.length > 0) {
+    const header = document.createElement("li");
+    header.innerHTML = "<strong>Extra ingredienser (valfritt):</strong>";
+    ul.appendChild(header);
+    opt.forEach((item, idx) => {
+      const key = `recipe-${recipeId}-opt-${idx}`;
+      const checked = localStorage.getItem(key) === "true" ? "checked" : "";
+      const doneClass = checked ? "done" : "";
+      const li = document.createElement("li");
+      li.className = doneClass;
+      li.innerHTML = `<label><input type='checkbox' ${checked} onchange="toggleDone(this, '${key}')"> ${item}</label>`;
+      ul.appendChild(li);
+    });
+  }
 }
+
 
 // === Överstrykning + spara ===
 function toggleDone(checkbox, key) {
@@ -300,6 +290,32 @@ def match_endpoint():
 
 @app.route("/shoppinglist", methods=["POST"])
 def shoppinglist_endpoint():
+    data = request.json
+    pantry = data.get("pantry", [])
+    leftovers = data.get("leftovers", [])
+    recipe_id = data.get("recipe_id")
+
+    recipe = next((r for r in RECIPES if r["id"] == recipe_id), None)
+    if not recipe:
+        return jsonify({"error": "Recipe not found"}), 404
+
+    have = set([i.strip().lower() for i in pantry + leftovers])
+
+    # Dela upp ingredienser
+    required = [i.lower() for i in recipe.get("required_ingredients", [])]
+    optional = [i.lower() for i in recipe.get("optional_ingredients", [])]
+
+    missing_required = [i for i in required if i not in have]
+    missing_optional = [i for i in optional if i not in have]
+
+    return jsonify({
+        "recipe": recipe["title"],
+        "shopping_list": {
+            "required": missing_required,
+            "optional": missing_optional
+        }
+    })
+
     data = request.json
     pantry = data.get("pantry", [])
     leftovers = data.get("leftovers", [])
