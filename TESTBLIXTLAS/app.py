@@ -9,8 +9,8 @@ RECIPES = [
         "optional_ingredients": ["soja", "morot", "lök"],
         "instructions": [
             "Skär kycklingen i bitar och stek tills den är genomstekt.",
-            "Tillsätt hackad lök och morot, fräs i några minuter.",
-            "Knäck i ägg och rör om.",
+            "Tillsatt hackad lök och morot, fräs i några minuter.",
+            "Knack i ägg och rör om.",
             "Blanda i ris och soja, stek tills allt är varmt."
         ]
     },
@@ -21,11 +21,58 @@ RECIPES = [
         "optional_ingredients": ["lök", "vitlök", "spiskummin"],
         "instructions": [
             "Fräs lök och vitlök i lite olja.",
-            "Tillsätt tomat och kryddor.",
+            "Tillsatt tomat och kryddor.",
             "Häll i linser och vatten, låt koka tills linserna är mjuka."
         ]
     },
-    # ...osv
+    {
+        "id": 3,
+        "title": "Pasta med ostsås",
+        "required_ingredients": ["pasta", "ost", "mjölk"],
+        "optional_ingredients": ["smör", "peppar", "salt"],
+        "instructions": [
+            "Koka pastan enligt anvisningarna.",
+            "Smält smör i en kastrull, tillsätt mjölk och ost.",
+            "Rör tills osten har smält.",
+            "Blanda med pastan och krydda."
+        ]
+    },
+    {
+        "id": 4,
+        "title": "Grönsakssoppa",
+        "required_ingredients": ["potatis", "morot", "vatten"],
+        "optional_ingredients": ["selleri", "buljong", "persilja"],
+        "instructions": [
+            "Skal och tarning potatis och morot.",
+            "Koka i vatten med buljong.",
+            "Tillsatt selleri och lat sjuda tills gronsakerna ar mjuka.",
+            "Servera med hackad persilja."
+        ]
+    },
+    {
+        "id": 5,
+        "title": "Kycklingwok",
+        "required_ingredients": ["kyckling", "grönsaker"],
+        "optional_ingredients": ["soja", "nudlar", "vitlok"],
+        "instructions": [
+            "Stek kycklingen tills den är gyllenbrun.",
+            "Tillsatt grönsaker och vitlok, fräs snabbt.",
+            "Blanda i soja och kokta nudlar.",
+            "Servera genast."
+        ]
+    },
+    {
+        "id": 6,
+        "title": "Omelett",
+        "required_ingredients": ["ägg"],
+        "optional_ingredients": ["ost", "tomat", "skinka"],
+        "instructions": [
+            "Vispa äggen och krydda.",
+            "Häll i en varm panna.",
+            "Tillsätt ost, tomat och skinka.",
+            "Vik ihop och servera."
+        ]
+    },
 ]
 
 def match_recipes(pantry, leftovers, top_n=5):
@@ -38,12 +85,9 @@ def match_recipes(pantry, leftovers, top_n=5):
 
         matched_req = [i for i in req if i in have]
         missing_req = [i for i in req if i not in have]
-
-
         matched_opt = [i for i in opt if i in have]
         missing_opt = [i for i in opt if i not in have]
 
-        # enkel poäng baserad på hur många extra ingredienser du har
         score = len(matched_opt) / max(len(opt), 1)
 
         results.append({
@@ -59,6 +103,7 @@ def match_recipes(pantry, leftovers, top_n=5):
 
     results.sort(key=lambda x: x["score"], reverse=True)
     return results[:top_n]
+
 
 # ---- HTML + JS ----
 HTML_PAGE = """
@@ -99,9 +144,10 @@ HTML_PAGE = """
   <h2>Förslag:</h2>
   <div id="results"></div>
 
-
 <script>
-// === LocalStorage för Skafferi & Rester ===
+let currentLimit = 5;
+let allRecipes = [];
+
 function saveInputs() {
   localStorage.setItem("pantry", document.getElementById("pantry").value);
   localStorage.setItem("leftovers", document.getElementById("leftovers").value);
@@ -110,53 +156,55 @@ function loadInputs() {
   document.getElementById("pantry").value = localStorage.getItem("pantry") || "";
   document.getElementById("leftovers").value = localStorage.getItem("leftovers") || "";
 }
-
-// === Rensa allt sparat ===
 function clearAll() {
-  if (confirm("Är du säker på att du vill rensa ALLT (skafferi, rester & checkboxar)?")) {
+  if (confirm("Ar du saker pa att du vill rensa ALLT (skafferi, rester & checkboxar)?")) {
     localStorage.clear();
     location.reload();
   }
 }
-
-// === Rensa bara checkboxar ===
 function clearCheckboxes() {
-  if (confirm("Rensa bara checkboxar (instruktioner & inköpslista), men behåll Skafferi och Rester?")) {
-    const keysToKeep = ["pantry", "leftovers"];
+  if (confirm("Rensa bara checkboxar (instruktioner & inkopslista), men behall Skafferi och Rester?")) {
     const savedPantry = localStorage.getItem("pantry");
     const savedLeftovers = localStorage.getItem("leftovers");
-
     localStorage.clear();
-
     if (savedPantry !== null) localStorage.setItem("pantry", savedPantry);
     if (savedLeftovers !== null) localStorage.setItem("leftovers", savedLeftovers);
-
     location.reload();
   }
 }
 
+async function findRecipes(loadMore = false) {
+  saveInputs();
 
-// === Hämta recept ===
-async function findRecipes() {
-  saveInputs(); // spara direkt vid sökning
-  const pantry = document.getElementById("pantry").value.split(",").map(x=>x.trim());
-  const leftovers = document.getElementById("leftovers").value.split(",").map(x=>x.trim());
+  const pantry = document.getElementById("pantry").value.split(",").map(x => x.trim());
+  const leftovers = document.getElementById("leftovers").value.split(",").map(x => x.trim());
+
+  if (!loadMore) {
+    currentLimit = 5;
+    allRecipes = [];
+    document.getElementById("results").innerHTML = "";
+  } else {
+    currentLimit += 5;
+  }
 
   const res = await fetch("/match", {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({pantry, leftovers})
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ pantry, leftovers, limit: currentLimit })
   });
   const data = await res.json();
+  const recipes = data.matches;
+  const total = data.total;
+
+  const newRecipes = recipes.slice(allRecipes.length);
+  allRecipes = recipes;
 
   const resultsDiv = document.getElementById("results");
-  resultsDiv.innerHTML = "";
 
-  data.forEach(r => {
+  newRecipes.forEach(r => {
     const div = document.createElement("div");
     div.className = "recipe";
 
-    // Instruktionslista
     let instrList = "<ol>";
     r.instructions.forEach((step, idx) => {
       const key = "recipe-" + r.id + "-step-" + idx;
@@ -181,24 +229,43 @@ async function findRecipes() {
       <div id="details-${r.id}" class="details">
         <h4>Instruktioner</h4>
         ${instrList}
-        <h4>Inköpslista</h4>
+        <h4>Inkopslista</h4>
         <ul id="shopping-${r.id}"><li>Laddar...</li></ul>
       </div>
     `;
     resultsDiv.appendChild(div);
-
-    // Ladda inköpslista
     getShopping(r.id);
   });
+
+  let loadMoreBtn = document.getElementById("loadMoreBtn");
+  if (!loadMoreBtn) {
+    loadMoreBtn = document.createElement("button");
+    loadMoreBtn.id = "loadMoreBtn";
+    loadMoreBtn.innerText = "Ladda fler recept";
+    loadMoreBtn.onclick = () => findRecipes(true);
+    loadMoreBtn.style.display = "block";
+    loadMoreBtn.style.margin = "15px auto";
+    loadMoreBtn.style.padding = "8px 16px";
+    loadMoreBtn.style.background = "#3498db";
+    loadMoreBtn.style.color = "white";
+    loadMoreBtn.style.border = "none";
+    loadMoreBtn.style.borderRadius = "8px";
+    loadMoreBtn.style.cursor = "pointer";
+    resultsDiv.appendChild(loadMoreBtn);
+  }
+
+  if (recipes.length >= total) {
+    loadMoreBtn.style.display = "none";
+  } else {
+    loadMoreBtn.style.display = "block";
+  }
 }
 
-// === Expandera sektion ===
 function toggleDetails(id) {
   const div = document.getElementById("details-" + id);
   div.classList.toggle("open");
 }
 
-// === Inköpslista ===
 async function getShopping(recipeId) {
   const pantry = document.getElementById("pantry").value.split(",").map(x=>x.trim());
   const leftovers = document.getElementById("leftovers").value.split(",").map(x=>x.trim());
@@ -217,13 +284,13 @@ async function getShopping(recipeId) {
   const opt = data.shopping_list.optional;
 
   if (req.length === 0 && opt.length === 0) {
-    ul.innerHTML = "<li>Du har allt du behöver! ✅</li>";
+    ul.innerHTML = "<li>Du har allt du behover! ✅</li>";
     return;
   }
 
   if (req.length > 0) {
     const header = document.createElement("li");
-    header.innerHTML = "<strong>Obligatoriskt att köpa:</strong>";
+    header.innerHTML = "<strong>Obligatoriskt att kopa:</strong>";
     ul.appendChild(header);
     req.forEach((item, idx) => {
       const key = `recipe-${recipeId}-req-${idx}`;
@@ -252,8 +319,6 @@ async function getShopping(recipeId) {
   }
 }
 
-
-// === Överstrykning + spara ===
 function toggleDone(checkbox, key) {
   const label = checkbox.parentNode;
   if (checkbox.checked) {
@@ -265,7 +330,6 @@ function toggleDone(checkbox, key) {
   }
 }
 
-// === Init ===
 window.onload = function() {
   loadInputs();
   document.getElementById("pantry").addEventListener("input", saveInputs);
@@ -285,8 +349,10 @@ def match_endpoint():
     data = request.json
     pantry = data.get("pantry", [])
     leftovers = data.get("leftovers", [])
-    matches = match_recipes(pantry, leftovers)
-    return jsonify(matches)
+    limit = data.get("limit", 5)
+    matches = match_recipes(pantry, leftovers, top_n=limit)
+    total_recipes = len(RECIPES)
+    return jsonify({"matches": matches, "total": total_recipes})
 
 @app.route("/shoppinglist", methods=["POST"])
 def shoppinglist_endpoint():
@@ -300,11 +366,8 @@ def shoppinglist_endpoint():
         return jsonify({"error": "Recipe not found"}), 404
 
     have = set([i.strip().lower() for i in pantry + leftovers])
-
-    # Dela upp ingredienser
     required = [i.lower() for i in recipe.get("required_ingredients", [])]
     optional = [i.lower() for i in recipe.get("optional_ingredients", [])]
-
     missing_required = [i for i in required if i not in have]
     missing_optional = [i for i in optional if i not in have]
 
@@ -316,20 +379,5 @@ def shoppinglist_endpoint():
         }
     })
 
-    data = request.json
-    pantry = data.get("pantry", [])
-    leftovers = data.get("leftovers", [])
-    recipe_id = data.get("recipe_id")
-
-    recipe = next((r for r in RECIPES if r["id"] == recipe_id), None)
-    if not recipe:
-        return jsonify({"error": "Recipe not found"}), 404
-
-    have = set([i.strip().lower() for i in pantry + leftovers])
-    missing = [i for i in recipe["ingredients"] if i.lower() not in have]
-    return jsonify({"recipe": recipe["title"], "shopping_list": missing})
-
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
-
-
