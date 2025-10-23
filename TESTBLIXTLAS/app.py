@@ -88,7 +88,7 @@ def match_recipes(pantry, leftovers, top_n=5):
         matched_opt = [i for i in opt if i in have]
         missing_opt = [i for i in opt if i not in have]
 
-        score = len(matched_opt) / max(len(opt), 1)
+        score = len(matched_opt+matched_req) / max(len(opt+req), 1)
 
         results.append({
             "id": r["id"],
