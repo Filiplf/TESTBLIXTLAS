@@ -122,24 +122,59 @@ HTML_PAGE = """
     .details { max-height: 0; overflow: hidden; transition: max-height 0.5s ease-out; }
     .details.open { max-height: 600px; transition: max-height 0.8s ease-in; }
     ol, ul { padding-left: 20px; }
-    li { margin: 5px 0; }
+    li { margin: 5px 0; cursor: pointer; }
     label { cursor: pointer; }
     .done { text-decoration: line-through; color: gray; }
+    .list-section { margin-bottom: 20px; }
+    .input-row { margin-bottom: 8px; }
+    button.add-btn { background: #2ecc71; color: white; border: none; border-radius: 6px; cursor: pointer; padding: 5px 10px; }
+    button.remove-btn { background: #e74c3c; color: white; border: none; border-radius: 6px; cursor: pointer; padding: 2px 8px; margin-left: 6px; }
+    button.action { background: #3498db; color: white; border: none; border-radius: 8px; cursor: pointer; padding: 8px 16px; margin: 5px; }
   </style>
 </head>
 <body>
   <h1>🍲 Food Rescue</h1>
-  <p>Skriv in vad du har hemma:</p>
+  <p>Skriv in vad du har hemma. En ingrediens per rad:</p>
 
-  <label>Skafferi (komma-separerat):</label><br>
-  <input type="text" id="pantry" size="60"><br>
+  <div class="list-section">
+    <h3>Skafferi</h3>
+    <div class="input-row">
+      <input type="text" id="pantryInput" placeholder="t.ex. ris">
+      <button class="add-btn" onclick="addItem('pantry')">Lägg till</button>
+    </div>
+    <ul id="pantryList"></ul>
+  </div>
 
-  <label>Rester (komma-separerat):</label><br>
-  <input type="text" id="leftovers" size="60"><br><br>
+  <div class="list-section">
+    <h3>Kyl</h3>
+    <div class="input-row">
+      <input type="text" id="fridgeInput" placeholder="t.ex. mjölk">
+      <button class="add-btn" onclick="addItem('fridge')">Lägg till</button>
+    </div>
+    <ul id="fridgeList"></ul>
+  </div>
 
-  <button onclick="findRecipes()">Hitta recept</button>
-  <button onclick="clearAll()">Rensa allt sparat</button>
-  <button onclick="clearCheckboxes()">Rensa bara checkboxar</button>
+  <div class="list-section">
+    <h3>Frys</h3>
+    <div class="input-row">
+      <input type="text" id="freezerInput" placeholder="t.ex. ärtor">
+      <button class="add-btn" onclick="addItem('freezer')">Lägg till</button>
+    </div>
+    <ul id="freezerList"></ul>
+  </div>
+
+  <div class="list-section">
+    <h3>Rester</h3>
+    <div class="input-row">
+      <input type="text" id="leftoversInput" placeholder="t.ex. kycklinggryta">
+      <button class="add-btn" onclick="addItem('leftovers')">Lägg till</button>
+    </div>
+    <ul id="leftoversList"></ul>
+  </div>
+
+  <button class="action" onclick="findRecipes()">Hitta recept</button>
+  <button class="action" onclick="clearAll()">Rensa allt sparat</button>
+  <button class="action" onclick="clearCheckboxes()">Rensa bara checkboxar</button>
 
   <h2>Förslag:</h2>
   <div id="results"></div>
@@ -148,36 +183,88 @@ HTML_PAGE = """
 let currentLimit = 5;
 let allRecipes = [];
 
-function saveInputs() {
-  localStorage.setItem("pantry", document.getElementById("pantry").value);
-  localStorage.setItem("leftovers", document.getElementById("leftovers").value);
-}
-function loadInputs() {
-  document.getElementById("pantry").value = localStorage.getItem("pantry") || "";
-  document.getElementById("leftovers").value = localStorage.getItem("leftovers") || "";
-}
-function clearAll() {
-  if (confirm("Ar du saker pa att du vill rensa ALLT (skafferi, rester & checkboxar)?")) {
-    localStorage.clear();
-    location.reload();
+function addItem(type) {
+  const input = document.getElementById(type + "Input");
+  const value = input.value.trim().toLowerCase();
+  if (!value) return;
+
+  const list = document.getElementById(type + "List");
+  if (Array.from(list.children).some(li => li.firstChild.textContent === value)) {
+    alert("Den ingrediensen finns redan i " + type + "!");
+    input.value = "";
+    return;
   }
+
+  const li = document.createElement("li");
+  li.textContent = value;
+  const btn = document.createElement("button");
+  btn.textContent = "x";
+  btn.className = "remove-btn";
+  btn.onclick = () => { li.remove(); saveInputs(); };
+  li.appendChild(btn);
+  list.appendChild(li);
+  input.value = "";
+  saveInputs();
 }
-function clearCheckboxes() {
-  if (confirm("Rensa bara checkboxar (instruktioner & inkopslista), men behall Skafferi och Rester?")) {
-    const savedPantry = localStorage.getItem("pantry");
-    const savedLeftovers = localStorage.getItem("leftovers");
+
+function getListValues(type) {
+  return Array.from(document.querySelectorAll(`#${type}List li`)).map(li => li.firstChild.textContent);
+}
+
+function saveInputs() {
+  const lists = ["pantry", "fridge", "freezer", "leftovers"];
+  lists.forEach(l => localStorage.setItem(l, JSON.stringify(getListValues(l))));
+}
+
+function loadInputs() {
+  const lists = ["pantry", "fridge", "freezer", "leftovers"];
+  lists.forEach(l => {
+    const data = JSON.parse(localStorage.getItem(l) || "[]");
+    data.forEach(i => addItemFromMemory(l, i));
+  });
+}
+
+function addItemFromMemory(type, value) {
+  const list = document.getElementById(type + "List");
+  const li = document.createElement("li");
+  li.textContent = value;
+  const btn = document.createElement("button");
+  btn.textContent = "x";
+  btn.className = "remove-btn";
+  btn.onclick = () => { li.remove(); saveInputs(); };
+  li.appendChild(btn);
+  list.appendChild(li);
+}
+
+function clearAll() {
+  if (confirm("Är du säker på att du vill rensa ALLT (skafferi, kyl, frys, rester & checkboxar)?")) {
     localStorage.clear();
-    if (savedPantry !== null) localStorage.setItem("pantry", savedPantry);
-    if (savedLeftovers !== null) localStorage.setItem("leftovers", savedLeftovers);
     location.reload();
   }
 }
 
+function clearCheckboxes() {
+  if (confirm("Rensa bara checkboxar (instruktioner & inköpslista), men behåll Skafferi, Kyl, Frys och Rester?")) {
+    const saved = {};
+    ["pantry","fridge","freezer","leftovers"].forEach(l => saved[l] = localStorage.getItem(l));
+    localStorage.clear();
+    Object.keys(saved).forEach(k => {
+      if (saved[k]) localStorage.setItem(k, saved[k]);
+    });
+    location.reload();
+  }
+}
+
+// --- Matchning ---
 async function findRecipes(loadMore = false) {
   saveInputs();
 
-  const pantry = document.getElementById("pantry").value.split(",").map(x => x.trim());
-  const leftovers = document.getElementById("leftovers").value.split(",").map(x => x.trim());
+  const pantry = getListValues("pantry");
+  const fridge = getListValues("fridge");
+  const freezer = getListValues("freezer");
+  const leftovers = getListValues("leftovers");
+
+  const allItems = pantry.concat(fridge, freezer, leftovers);
 
   if (!loadMore) {
     currentLimit = 5;
@@ -190,7 +277,7 @@ async function findRecipes(loadMore = false) {
   const res = await fetch("/match", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ pantry, leftovers, limit: currentLimit })
+    body: JSON.stringify({ pantry: allItems, leftovers: [], limit: currentLimit })
   });
   const data = await res.json();
   const recipes = data.matches;
@@ -229,7 +316,7 @@ async function findRecipes(loadMore = false) {
       <div id="details-${r.id}" class="details">
         <h4>Instruktioner</h4>
         ${instrList}
-        <h4>Inkopslista</h4>
+        <h4>Inköpslista</h4>
         <ul id="shopping-${r.id}"><li>Laddar...</li></ul>
       </div>
     `;
@@ -242,15 +329,8 @@ async function findRecipes(loadMore = false) {
     loadMoreBtn = document.createElement("button");
     loadMoreBtn.id = "loadMoreBtn";
     loadMoreBtn.innerText = "Ladda fler recept";
+    loadMoreBtn.className = "action";
     loadMoreBtn.onclick = () => findRecipes(true);
-    loadMoreBtn.style.display = "block";
-    loadMoreBtn.style.margin = "15px auto";
-    loadMoreBtn.style.padding = "8px 16px";
-    loadMoreBtn.style.background = "#3498db";
-    loadMoreBtn.style.color = "white";
-    loadMoreBtn.style.border = "none";
-    loadMoreBtn.style.borderRadius = "8px";
-    loadMoreBtn.style.cursor = "pointer";
     resultsDiv.appendChild(loadMoreBtn);
   }
 
@@ -267,13 +347,16 @@ function toggleDetails(id) {
 }
 
 async function getShopping(recipeId) {
-  const pantry = document.getElementById("pantry").value.split(",").map(x=>x.trim());
-  const leftovers = document.getElementById("leftovers").value.split(",").map(x=>x.trim());
+  const allItems = getListValues("pantry").concat(
+    getListValues("fridge"),
+    getListValues("freezer"),
+    getListValues("leftovers")
+  );
 
   const res = await fetch("/shoppinglist", {
     method: "POST",
     headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({pantry, leftovers, recipe_id: recipeId})
+    body: JSON.stringify({pantry: allItems, leftovers: [], recipe_id: recipeId})
   });
   const data = await res.json();
 
@@ -284,13 +367,13 @@ async function getShopping(recipeId) {
   const opt = data.shopping_list.optional;
 
   if (req.length === 0 && opt.length === 0) {
-    ul.innerHTML = "<li>Du har allt du behover! ✅</li>";
+    ul.innerHTML = "<li>Du har allt du behöver! ✅</li>";
     return;
   }
 
   if (req.length > 0) {
     const header = document.createElement("li");
-    header.innerHTML = "<strong>Obligatoriskt att kopa:</strong>";
+    header.innerHTML = "<strong>Obligatoriskt att köpa:</strong>";
     ul.appendChild(header);
     req.forEach((item, idx) => {
       const key = `recipe-${recipeId}-req-${idx}`;
@@ -332,13 +415,13 @@ function toggleDone(checkbox, key) {
 
 window.onload = function() {
   loadInputs();
-  document.getElementById("pantry").addEventListener("input", saveInputs);
-  document.getElementById("leftovers").addEventListener("input", saveInputs);
 };
 </script>
 </body>
 </html>
 """
+
+
 
 @app.route("/")
 def index():
