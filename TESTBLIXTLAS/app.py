@@ -111,7 +111,7 @@ HTML_PAGE = """
 <html lang="sv">
 <head>
   <meta charset="UTF-8">
-  <title>Food Rescue</title>
+  <title>Next Meal</title>
   <style>
     body { font-family: Arial, sans-serif; margin: 30px; }
     h1 { color: #2c3e50; }
@@ -133,7 +133,7 @@ HTML_PAGE = """
   </style>
 </head>
 <body>
-  <h1>🍲 Food Rescue</h1>
+  <h1>🍲 Next Meal</h1>
   <p>Skriv in vad du har hemma. En ingrediens per rad:</p>
 
   <div class="list-section">
