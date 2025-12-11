@@ -2,14 +2,9 @@
 
 app = Flask(__name__)
 
-# -------------------------
-# RECIPES (med amounts + units + step_ingredients)
-# varje recept innehåller:
-# - required_ingredients: lista av {name, amount, unit}
-# - optional_ingredients: samma struktur
-# - instructions: lista str
-# - step_ingredients: lista (per steg) med listor av {name, amount, unit}
-# -------------------------
+# ============================================================
+#  RECIPES
+# ============================================================
 
 RECIPES = [
     {
@@ -32,10 +27,10 @@ RECIPES = [
             "Blanda i ris och soja, stek tills allt är varmt."
         ],
         "step_ingredients": [
-            [ {"name":"kyckling","amount":200,"unit":"g"} ],
-            [ {"name":"lok","amount":0.5,"unit":"st"}, {"name":"morot","amount":1,"unit":"st"} ],
-            [ {"name":"agg","amount":2,"unit":"st"} ],
-            [ {"name":"ris","amount":2,"unit":"dl"}, {"name":"soja","amount":1,"unit":"msk"} ]
+            [{"name": "kyckling", "amount": 200, "unit": "g"}],
+            [{"name": "lok", "amount": 0.5, "unit": "st"}, {"name": "morot", "amount": 1, "unit": "st"}],
+            [{"name": "agg", "amount": 2, "unit": "st"}],
+            [{"name": "ris", "amount": 2, "unit": "dl"}, {"name": "soja", "amount": 1, "unit": "msk"}]
         ]
     },
     {
@@ -56,9 +51,9 @@ RECIPES = [
             "Häll i linser och vatten, låt koka tills linserna är mjuka."
         ],
         "step_ingredients": [
-            [ {"name":"lok","amount":1,"unit":"st"}, {"name":"vitlok","amount":2,"unit":"klyfta"} ],
-            [ {"name":"tomat","amount":400,"unit":"g"}, {"name":"spiskummin","amount":1,"unit":"tsk"} ],
-            [ {"name":"linser","amount":2,"unit":"dl"} ]
+            [{"name":"lok","amount":1,"unit":"st"}, {"name":"vitlok","amount":2,"unit":"klyfta"}],
+            [{"name":"tomat","amount":400,"unit":"g"}, {"name":"spiskummin","amount":1,"unit":"tsk"}],
+            [{"name":"linser","amount":2,"unit":"dl"}]
         ]
     },
     {
@@ -161,52 +156,53 @@ RECIPES = [
             [ {"name":"ost","amount":30,"unit":"g"}, {"name":"tomat","amount":1,"unit":"st"}, {"name":"skinka","amount":50,"unit":"g"} ],
             []
         ]
-    },
+    }
 ]
 
-# -------------------------
-# Hjälpfunktioner för backend
-# -------------------------
+# ============================================================
+#  HELPERS
+# ============================================================
+
 def normalize_name(n):
     return n.strip().lower()
 
 def gather_have_quantities(pantry_list):
-    """
-    pantry_list: list of dicts {name, quantity, unit}
-    Returns mapping (name -> {unit -> total_quantity})
-    """
     have = {}
     for item in pantry_list:
         if not isinstance(item, dict):
-            # If older clients send plain strings, ignore quantity
             name = normalize_name(str(item))
             have.setdefault(name, {}).setdefault("", 0)
             continue
+
         name = normalize_name(item.get("name", ""))
-        try:
-            qty = float(item.get("quantity", 0))
-        except:
-            qty = 0
+        qty = float(item.get("quantity", 0))
         unit = item.get("unit", "") or ""
+
         have.setdefault(name, {})
         have[name].setdefault(unit, 0)
         have[name][unit] += qty
+
     return have
 
-# match_recipes: return top_n recipes sorted by how many required+optional ingredients matched by name
+
 def match_recipes(pantry, leftovers, top_n=5):
-    have_names = set([normalize_name(i["name"]) for i in pantry if isinstance(i, dict)]) | set([normalize_name(i) for i in pantry if not isinstance(i, dict)])
-    # include leftovers if they are dicts/strings
-    have_names |= set([normalize_name(i["name"]) for i in leftovers if isinstance(i, dict)]) | set([normalize_name(i) for i in leftovers if not isinstance(i, dict)])
+    have_names = set()
+
+    for i in pantry:
+        have_names.add(normalize_name(i["name"]) if isinstance(i, dict) else normalize_name(i))
+
+    for i in leftovers:
+        have_names.add(normalize_name(i["name"]) if isinstance(i, dict) else normalize_name(i))
 
     results = []
+
     for r in RECIPES:
-        req_names = [normalize_name(i["name"]) for i in r.get("required_ingredients", [])]
-        opt_names = [normalize_name(i["name"]) for i in r.get("optional_ingredients", [])]
+        req_names = [normalize_name(i["name"]) for i in r["required_ingredients"]]
+        opt_names = [normalize_name(i["name"]) for i in r["optional_ingredients"]]
 
         matched_req = [n for n in req_names if n in have_names]
-        missing_req = [n for n in req_names if n not in have_names]
         matched_opt = [n for n in opt_names if n in have_names]
+        missing_req = [n for n in req_names if n not in have_names]
         missing_opt = [n for n in opt_names if n not in have_names]
 
         score = len(matched_req + matched_opt) / max(len(req_names + opt_names), 1)
@@ -220,105 +216,36 @@ def match_recipes(pantry, leftovers, top_n=5):
             "missing_required": missing_req,
             "missing_optional": missing_opt,
             "instructions": r["instructions"],
-            # send full ingredient details so frontend can show amounts
             "required_ingredients": r["required_ingredients"],
-            "optional_ingredients": r["optional_ingredients"]
+            "optional_ingredients": r["optional_ingredients"],
+            "step_ingredients": r["step_ingredients"]
         })
+
     results.sort(key=lambda x: x["score"], reverse=True)
     return results[:top_n]
 
-# -------------------------
-# Routes
-# -------------------------
-@app.route("/")
-def index():
-    return render_template_string(HTML_PAGE)
+# ============================================================
+# FRONTEND HTML (YOUR HUGE DOCUMENT)
+# ============================================================
 
-@app.route("/match", methods=["POST"])
-def match_endpoint():
-    data = request.json or {}
-    pantry = data.get("pantry", [])
-    leftovers = data.get("leftovers", [])
-    limit = int(data.get("limit", 5))
-    matches = match_recipes(pantry, leftovers, top_n=limit)
-    total_recipes = len(RECIPES)
-    return jsonify({"matches": matches, "total": total_recipes})
-
-@app.route("/shoppinglist", methods=["POST"])
-def shoppinglist_endpoint():
-    """
-    Expects JSON:
-    {
-      "pantry": [ {name, quantity, unit}, ... ],
-      "leftovers": [...],
-      "recipe_id": int
-    }
-    Returns missing quantities (only subtract if same unit exists in pantry)
-    """
-    data = request.json or {}
-    pantry = data.get("pantry", [])
-    leftovers = data.get("leftovers", [])
-    recipe_id = data.get("recipe_id")
-
-    recipe = next((r for r in RECIPES if r["id"] == recipe_id), None)
-    if not recipe:
-        return jsonify({"error": "Recipe not found"}), 404
-
-    have = gather_have_quantities(pantry + leftovers)
-
-    missing_required = []
-    missing_optional = []
-
-    # Helper to compute missing for each ingredient entry (name, amount, unit)
-    def compute_missing(ing):
-        name = normalize_name(ing["name"])
-        req_amount = float(ing.get("amount", 0))
-        unit = ing.get("unit", "") or ""
-        # If pantry has same unit, subtract quantities available across that unit
-        available = 0
-        if name in have and unit in have[name]:
-            available = have[name][unit]
-        remaining = req_amount - available
-        if remaining <= 0:
-            return None  # nothing missing
-        else:
-            return {"name": name, "amount": round(remaining, 3), "unit": unit}
-
-    for ing in recipe.get("required_ingredients", []):
-        m = compute_missing(ing)
-        if m:
-            missing_required.append(m)
-
-    for ing in recipe.get("optional_ingredients", []):
-        m = compute_missing(ing)
-        if m:
-            missing_optional.append(m)
-
-    return jsonify({
-        "recipe": recipe["title"],
-        "shopping_list": {
-            "required": missing_required,
-            "optional": missing_optional
-        }
-    })
-
-# -------------------------
-# Frontend HTML (render_template_string)
-# -------------------------
-HTML_PAGE = """
-// COMPLETE INTEGRATED VERSION OF YOUR APP
-// Includes:
-// - Quantity tracking
-// - Step-based ingredient consumption
-// - Shopping list based on missing amounts
-// - Pantry/Fridge/Freezer columns
-// - Mobile styling
-// - Validation & error handling
-// - Full Flask backend integration
-
-// NOTE: This is the full frontend file. The backend (Flask app.py)
-// must accompany it for the application to function.
-
+HTML_PAGE = r"""
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<title>Next Meal+</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<style>
+body {
+  font-family: Arial, sans-serif;
+  margin: 20px;
+  background: #fafafa;
+}
+h1 { color: #2c3e50; }
+/* (… entire CSS … remain intact) */
+</style>
+</head>
+<body>
 <!DOCTYPE html>
 <html lang="sv">
 <head>
@@ -749,12 +676,80 @@ window.onload = loadInputs;
 </script>
 </body>
 </html>
+
+
+</body>
+</html>
 """
 
-# We need to pass the recipes into render_template_string so the Jinja loop can inject step_ingredients
-from jinja2 import Template
-HTML_PAGE = Template(HTML_PAGE).render(recipes=RECIPES)
+# ============================================================
+# ROUTES
+# ============================================================
 
-# -------------------------
+@app.route("/")
+def index():
+    return render_template_string(HTML_PAGE)
+
+
+@app.route("/match", methods=["POST"])
+def match_endpoint():
+    data = request.json or {}
+    pantry = data.get("pantry", [])
+    leftovers = data.get("leftovers", [])
+    limit = int(data.get("limit", 5))
+
+    matches = match_recipes(pantry, leftovers, top_n=limit)
+    return jsonify({"matches": matches, "total": len(RECIPES)})
+
+
+@app.route("/shoppinglist", methods=["POST"])
+def shopping():
+    data = request.json or {}
+    pantry = data.get("pantry", [])
+    leftovers = data.get("leftovers", [])
+    recipe_id = data.get("recipe_id")
+
+    recipe = next((r for r in RECIPES if r["id"] == recipe_id), None)
+    if recipe is None:
+        return jsonify({"error": "Recipe not found"}), 404
+
+    have = gather_have_quantities(pantry + leftovers)
+
+    def compute_missing(ing):
+        name = normalize_name(ing["name"])
+        req = float(ing["amount"])
+        unit = ing["unit"]
+
+        available = have.get(name, {}).get(unit, 0)
+        missing = req - available
+
+        if missing <= 0:
+            return None
+        return {"name": name, "amount": round(missing, 3), "unit": unit}
+
+    missing_required = []
+    missing_optional = []
+
+    for ing in recipe["required_ingredients"]:
+        m = compute_missing(ing)
+        if m: missing_required.append(m)
+
+    for ing in recipe["optional_ingredients"]:
+        m = compute_missing(ing)
+        if m: missing_optional.append(m)
+
+    return jsonify({
+        "recipe": recipe["title"],
+        "shopping_list": {
+            "required": missing_required,
+            "optional": missing_optional
+        }
+    })
+
+
+# ============================================================
+# RUN
+# ============================================================
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
