@@ -739,12 +739,17 @@ def shopping():
         if m: missing_optional.append(m)
 
     return jsonify({
-        "recipe": recipe["title"],
-        "shopping_list": {
-            "required": missing_required,
-            "optional": missing_optional
-        }
-    })
+    "recipe": recipe["title"],
+    "shopping_list": {
+        "required": [
+            f"{m['name']} {m['amount']} {m['unit']}" for m in missing_required
+        ],
+        "optional": [
+            f"{m['name']} {m['amount']} {m['unit']}" for m in missing_optional
+        ]
+    }
+})
+
 
 
 # ============================================================
