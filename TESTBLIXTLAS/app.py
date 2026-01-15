@@ -168,21 +168,27 @@ def normalize_name(n):
 
 def gather_have_quantities(pantry_list):
     have = {}
+
     for item in pantry_list:
         if not isinstance(item, dict):
-            name = normalize_name(str(item))
-            have.setdefault(name, {}).setdefault("", 0)
             continue
 
         name = normalize_name(item.get("name", ""))
-        qty = float(item.get("quantity", 0))
+        try:
+            qty = float(item.get("quantity", 0))
+        except (TypeError, ValueError):
+            qty = 0
+
         unit = item.get("unit", "") or ""
 
+        if qty <= 0 or not name:
+            continue
+
         have.setdefault(name, {})
-        have[name].setdefault(unit, 0)
-        have[name][unit] += qty
+        have[name][unit] = have[name].get(unit, 0) + qty
 
     return have
+
 
 
 def match_recipes(pantry, leftovers, top_n=5):
@@ -575,16 +581,20 @@ function toggleDetails(id) {
 // ---------------------------
 
 async function getShopping(recipeId) {
-  const all = [
-    ...storageData.pantry.map(i=>i.name),
-    ...storageData.fridge.map(i=>i.name),
-    ...storageData.freezer.map(i=>i.name)
+  const allItems = [
+    ...storageData.pantry,
+    ...storageData.fridge,
+    ...storageData.freezer
   ];
 
   const res = await fetch("/shoppinglist", {
     method: "POST",
     headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ pantry: all, leftovers: [], recipe_id: recipeId })
+    body: JSON.stringify({
+      pantry: allItems,
+      leftovers: [],
+      recipe_id: recipeId
+    })
   });
 
   const data = await res.json();
@@ -595,7 +605,7 @@ async function getShopping(recipeId) {
   const opt = data.shopping_list.optional;
 
   if (req.length === 0 && opt.length === 0) {
-    table.innerHTML = "<tr><td>Du har allt!✓</td></tr>";
+    table.innerHTML = "<tr><td>Du har allt! ✓</td></tr>";
     return;
   }
 
@@ -613,6 +623,7 @@ async function getShopping(recipeId) {
     });
   }
 }
+
 
 // ---------------------------
 // STEP CONSUMPTION
@@ -717,15 +728,21 @@ def shopping():
 
     def compute_missing(ing):
         name = normalize_name(ing["name"])
-        req = float(ing["amount"])
+        required = float(ing["amount"])
         unit = ing["unit"]
 
         available = have.get(name, {}).get(unit, 0)
-        missing = req - available
+        missing = round(required - available, 3)
 
         if missing <= 0:
             return None
-        return {"name": name, "amount": round(missing, 3), "unit": unit}
+
+        return {
+        "name": name,
+        "amount": missing,
+        "unit": unit
+    }
+
 
     missing_required = []
     missing_optional = []
