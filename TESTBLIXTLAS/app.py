@@ -162,6 +162,31 @@ RECIPES = [
 # ============================================================
 #  HELPERS
 # ============================================================
+UNIT_CONVERSIONS = {
+    ("kg", "g"): 1000,
+    ("g", "kg"): 1 / 1000,
+    ("l", "dl"): 10,
+    ("dl", "l"): 1 / 10,
+    ("l", "ml"): 1000,
+    ("ml", "l"): 1 / 1000,
+    ("dl", "ml"): 100,
+    ("ml", "dl"): 1 / 100
+}
+
+def convert(amount, from_unit, to_unit):
+    if from_unit == to_unit:
+        return amount
+    factor = UNIT_CONVERSIONS.get((from_unit, to_unit))
+    if factor is None:
+        return None
+    return amount * factor
+
+def scale_ingredients(ings, factor):
+    return [
+        {**i, "amount": round(i["amount"] * factor, 3)}
+        for i in ings
+    ]
+
 
 def normalize_name(n):
     return n.strip().lower()
@@ -190,42 +215,61 @@ def gather_have_quantities(pantry_list):
     return have
 
 
-
-def match_recipes(pantry, leftovers, top_n=5):
-    have_names = set()
-
-    for i in pantry:
-        have_names.add(normalize_name(i["name"]) if isinstance(i, dict) else normalize_name(i))
-
-    for i in leftovers:
-        have_names.add(normalize_name(i["name"]) if isinstance(i, dict) else normalize_name(i))
-
+def match_recipes(pantry, leftovers, portions=1, top_n=5):
+    have = gather_have_quantities(pantry + leftovers)
     results = []
 
     for r in RECIPES:
-        req_names = [normalize_name(i["name"]) for i in r["required_ingredients"]]
-        opt_names = [normalize_name(i["name"]) for i in r["optional_ingredients"]]
+        score = 0
+        max_score = len(r["required_ingredients"]) * 2 + len(r["optional_ingredients"])
 
-        matched_req = [n for n in req_names if n in have_names]
-        matched_opt = [n for n in opt_names if n in have_names]
-        missing_req = [n for n in req_names if n not in have_names]
-        missing_opt = [n for n in opt_names if n not in have_names]
+        matched_required = []
+        matched_optional = []
+        missing_required = []
 
-        score = len(matched_req + matched_opt) / max(len(req_names + opt_names), 1)
+
+        # REQUIRED = tung vikt
+        for ing in r["required_ingredients"]:
+           name = normalize_name(ing["name"])
+           req_amt = ing["amount"]
+           req_unit = ing["unit"]
+
+           available = 0
+           for u, qty in have.get(name, {}).items():
+                converted = convert(qty, u, req_unit)
+                if converted is not None:
+                 available += converted
+
+                if available >= req_amt:
+                 score += 2
+                 matched_required.append(name)
+                else:
+                 missing_required.append(name)
+
+        # OPTIONAL = lätt vikt
+        for ing in r["optional_ingredients"]:
+            name = normalize_name(ing["name"])
+            if name in have:
+                score += 1
+                matched_optional.append(name)
 
         results.append({
-            "id": r["id"],
-            "title": r["title"],
-            "score": round(score, 3),
-            "matched_required": matched_req,
-            "matched_optional": matched_opt,
-            "missing_required": missing_req,
-            "missing_optional": missing_opt,
-            "instructions": r["instructions"],
-            "required_ingredients": r["required_ingredients"],
-            "optional_ingredients": r["optional_ingredients"],
-            "step_ingredients": r["step_ingredients"]
-        })
+         "id": r["id"],
+         "title": r["title"],
+         "score": round(score / max_score, 3),
+         "matched_required": matched_required,
+         "matched_optional": matched_optional,
+         "missing_required": missing_required,
+         "instructions": r["instructions"],
+         "required_ingredients": scale_ingredients(r["required_ingredients"], portions),
+         "optional_ingredients": scale_ingredients(r["optional_ingredients"], portions),
+         "step_ingredients": [
+            scale_ingredients(step, portions)
+            for step in r["step_ingredients"]
+         ]
+})
+
+
 
     results.sort(key=lambda x: x["score"], reverse=True)
     return results[:top_n]
@@ -409,6 +453,11 @@ table.shopping {
   </div>
 </div>
 
+<label>
+  Portioner:
+  <input type="number" id="portionInput" value="1" min="0.5" step="0.5">
+</label>
+
 <button class="action" onclick="findRecipes()">Hitta recept</button>
 <button class="action" onclick="clearAll()">Rensa allt</button>
 
@@ -523,11 +572,23 @@ async function findRecipes() {
     ...storageData.freezer.map(i=>i.name)
   ];
 
-  const res = await fetch("/match", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ pantry: collected, leftovers: [], limit: 10 })
-  });
+  const portions = parseFloat(document.getElementById("portionInput").value) || 1;
+
+const res = await fetch("/match", {
+  method: "POST",
+  headers: {"Content-Type":"application/json"},
+  body: JSON.stringify({
+    pantry: [
+      ...storageData.pantry,
+      ...storageData.fridge,
+      ...storageData.freezer
+    ],
+    leftovers: [],
+    limit: 10,
+    portions
+  })
+});
+
 
   const data = await res.json();
   const recipes = data.matches;
@@ -705,12 +766,24 @@ def index():
 @app.route("/match", methods=["POST"])
 def match_endpoint():
     data = request.json or {}
+
     pantry = data.get("pantry", [])
     leftovers = data.get("leftovers", [])
     limit = int(data.get("limit", 5))
+    portions = float(data.get("portions", 1))
 
-    matches = match_recipes(pantry, leftovers, top_n=limit)
-    return jsonify({"matches": matches, "total": len(RECIPES)})
+    matches = match_recipes(
+        pantry,
+        leftovers,
+        portions=portions,
+        top_n=limit
+    )
+
+    return jsonify({
+        "matches": matches,
+        "total": len(RECIPES),
+        "portions": portions
+    })
 
 
 @app.route("/shoppinglist", methods=["POST"])
