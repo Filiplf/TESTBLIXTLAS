@@ -521,7 +521,9 @@ function renderStorageArea(area) {
     li.innerHTML = `
       <div class='ingredient-item'>
         <span>${escapeHtml(item.name)}: <span class="qty-value">${item.quantity}</span> ${escapeHtml(item.unit)}</span>
-        <button class="remove-btn" onclick="removeItem('${area}', '${item.name}')">x</button>
+        <button class="remove-btn"
+          onclick="removeItem('${area}', '${item.name}', '${item.unit}')">x</button>
+
       </div>`;
     list.appendChild(li);
   });
@@ -545,19 +547,32 @@ function addIngredient(area) {
     return;
   }
 
-  storageData[area].push({ name, quantity: qty, unit });
+  // 🔑 MERGE LOGIC
+  const existing = storageData[area].find(
+    i => i.name === name && i.unit === unit
+  );
+
+  if (existing) {
+    existing.quantity = Math.round((existing.quantity + qty) * 1000) / 1000;
+  } else {
+    storageData[area].push({ name, quantity: qty, unit });
+  }
+
   saveInputs();
   renderStorageArea(area);
 
   document.getElementById(area + "Input").value = "";
   document.getElementById(area + "Qty").value = "";
 }
+function removeItem(area, name, unit) {
+  storageData[area] = storageData[area].filter(
+    i => !(i.name === name && i.unit === unit)
+  );
 
-function removeItem(area, name) {
-  storageData[area] = storageData[area].filter(i => i.name !== name);
   saveInputs();
   renderStorageArea(area);
 }
+
 
 // ---------------------------
 // REQUEST RECIPES
