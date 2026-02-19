@@ -291,9 +291,9 @@ HTML_PAGE = r"""
 body {
   font-family: Arial, sans-serif;
   margin: 20px;
-  background: #fafafa;
+  background: #faf4e0;
 }
-h1 { color: #2c3e50; }
+h1 { color: #394c32; }
 
 .container {
   display: grid;
@@ -329,21 +329,21 @@ button {
 }
 
 .add-btn {
-  background: #2ecc71;
+  background: #394c32;
   color: white;
   border: none;
   padding: 5px 10px;
 }
 
 .remove-btn {
-  background: #e74c3c;
+  background: #394c32;
   color: white;
   border: none;
   padding: 2px 6px;
 }
 
 .action {
-  background: #3498db;
+  background: #394c32;
   color: white;
   border: none;
   padding: 8px 16px;
