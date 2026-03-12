@@ -11,26 +11,26 @@ RECIPES = [
         "id": 1,
         "title": "Stekt ris med kyckling",
         "required_ingredients": [
-            {"name": "ris", "amount": 2, "unit": "dl"},
+            {"name": "ris", "amount": 200, "unit": "g"},
             {"name": "kyckling", "amount": 200, "unit": "g"},
-            {"name": "agg", "amount": 2, "unit": "st"}
+            {"name": "ägg", "amount": 2, "unit": "st"}
         ],
         "optional_ingredients": [
             {"name": "soja", "amount": 1, "unit": "msk"},
             {"name": "morot", "amount": 1, "unit": "st"},
-            {"name": "lok", "amount": 0.5, "unit": "st"}
+            {"name": "lök", "amount": 0.5, "unit": "st"}
         ],
         "instructions": [
             "Skär kycklingen i bitar och stek tills den är genomstekt.",
-            "Tillsatt hackad lök och morot, fräs i några minuter.",
+            "Tillsätt hackad lök och morot, fräs i några minuter.",
             "Knack i ägg och rör om.",
             "Blanda i ris och soja, stek tills allt är varmt."
         ],
         "step_ingredients": [
             [{"name": "kyckling", "amount": 200, "unit": "g"}],
-            [{"name": "lok", "amount": 0.5, "unit": "st"}, {"name": "morot", "amount": 1, "unit": "st"}],
-            [{"name": "agg", "amount": 2, "unit": "st"}],
-            [{"name": "ris", "amount": 2, "unit": "dl"}, {"name": "soja", "amount": 1, "unit": "msk"}]
+            [{"name": "lök", "amount": 0.5, "unit": "st"}, {"name": "morot", "amount": 1, "unit": "st"}],
+            [{"name": "ägg", "amount": 2, "unit": "st"}],
+            [{"name": "ris", "amount": 200, "unit": "g"}, {"name": "soja", "amount": 1, "unit": "msk"}]
         ]
     },
     {
@@ -41,17 +41,17 @@ RECIPES = [
             {"name":"tomat","amount":400,"unit":"g"}
         ],
         "optional_ingredients": [
-            {"name":"lok","amount":1,"unit":"st"},
-            {"name":"vitlok","amount":2,"unit":"klyfta"},
+            {"name":"lök","amount":1,"unit":"st"},
+            {"name":"vitlök","amount":2,"unit":"klyfta"},
             {"name":"spiskummin","amount":1,"unit":"tsk"}
         ],
         "instructions": [
             "Fräs lök och vitlök i lite olja.",
-            "Tillsatt tomat och kryddor.",
+            "Tillsätt tomat och kryddor.",
             "Häll i linser och vatten, låt koka tills linserna är mjuka."
         ],
         "step_ingredients": [
-            [{"name":"lok","amount":1,"unit":"st"}, {"name":"vitlok","amount":2,"unit":"klyfta"}],
+            [{"name":"lök","amount":1,"unit":"st"}, {"name":"vitlök","amount":2,"unit":"klyfta"}],
             [{"name":"tomat","amount":400,"unit":"g"}, {"name":"spiskummin","amount":1,"unit":"tsk"}],
             [{"name":"linser","amount":2,"unit":"dl"}]
         ]
@@ -98,7 +98,7 @@ RECIPES = [
         "instructions": [
             "Skal och tärna potatis och morot.",
             "Koka i vatten med buljong.",
-            "Tillsatt selleri och låt sjuda tills grönsakerna är mjuka.",
+            "Tillsätt selleri och låt sjuda tills grönsakerna är mjuka.",
             "Servera med hackad persilja."
         ],
         "step_ingredients": [
@@ -118,17 +118,17 @@ RECIPES = [
         "optional_ingredients": [
             {"name":"soja","amount":1,"unit":"msk"},
             {"name":"nudlar","amount":200,"unit":"g"},
-            {"name":"vitlok","amount":1,"unit":"klyfta"}
+            {"name":"vitlök","amount":1,"unit":"klyfta"}
         ],
         "instructions": [
             "Stek kycklingen tills den är gyllenbrun.",
-            "Tillsatt grönsaker och vitlök, fräs snabbt.",
+            "Tillsätt grönsaker och vitlök, fräs snabbt.",
             "Blanda i soja och kokta nudlar.",
             "Servera genast."
         ],
         "step_ingredients": [
             [ {"name":"kyckling","amount":250,"unit":"g"} ],
-            [ {"name":"gronsaker","amount":300,"unit":"g"}, {"name":"vitlok","amount":1,"unit":"klyfta"} ],
+            [ {"name":"gronsaker","amount":300,"unit":"g"}, {"name":"vitlök","amount":1,"unit":"klyfta"} ],
             [ {"name":"soja","amount":1,"unit":"msk"}, {"name":"nudlar","amount":200,"unit":"g"} ],
             []
         ]
@@ -162,64 +162,116 @@ RECIPES = [
 # ============================================================
 #  HELPERS
 # ============================================================
+UNIT_CONVERSIONS = {
+    ("kg", "g"): 1000,
+    ("g", "kg"): 1 / 1000,
+    ("l", "dl"): 10,
+    ("dl", "l"): 1 / 10,
+    ("l", "ml"): 1000,
+    ("ml", "l"): 1 / 1000,
+    ("dl", "ml"): 100,
+    ("ml", "dl"): 1 / 100
+}
+
+def convert(amount, from_unit, to_unit):
+    if from_unit == to_unit:
+        return amount
+    factor = UNIT_CONVERSIONS.get((from_unit, to_unit))
+    if factor is None:
+        return None
+    return amount * factor
+
+def scale_ingredients(ings, factor):
+    return [
+        {**i, "amount": round(i["amount"] * factor, 3)}
+        for i in ings
+    ]
+
 
 def normalize_name(n):
     return n.strip().lower()
 
 def gather_have_quantities(pantry_list):
     have = {}
+
     for item in pantry_list:
         if not isinstance(item, dict):
-            name = normalize_name(str(item))
-            have.setdefault(name, {}).setdefault("", 0)
             continue
 
         name = normalize_name(item.get("name", ""))
-        qty = float(item.get("quantity", 0))
+        try:
+            qty = float(item.get("quantity", 0))
+        except (TypeError, ValueError):
+            qty = 0
+
         unit = item.get("unit", "") or ""
 
+        if qty <= 0 or not name:
+            continue
+
         have.setdefault(name, {})
-        have[name].setdefault(unit, 0)
-        have[name][unit] += qty
+        have[name][unit] = have[name].get(unit, 0) + qty
 
     return have
 
 
-def match_recipes(pantry, leftovers, top_n=5):
-    have_names = set()
-
-    for i in pantry:
-        have_names.add(normalize_name(i["name"]) if isinstance(i, dict) else normalize_name(i))
-
-    for i in leftovers:
-        have_names.add(normalize_name(i["name"]) if isinstance(i, dict) else normalize_name(i))
-
+def match_recipes(pantry, leftovers, portions=1, top_n=5):
+    have = gather_have_quantities(pantry + leftovers)
     results = []
 
     for r in RECIPES:
-        req_names = [normalize_name(i["name"]) for i in r["required_ingredients"]]
-        opt_names = [normalize_name(i["name"]) for i in r["optional_ingredients"]]
+        score = 0
+        max_score = len(r["required_ingredients"]) * 2 + len(r["optional_ingredients"])
 
-        matched_req = [n for n in req_names if n in have_names]
-        matched_opt = [n for n in opt_names if n in have_names]
-        missing_req = [n for n in req_names if n not in have_names]
-        missing_opt = [n for n in opt_names if n not in have_names]
+        matched_required = []
+        matched_optional = []
+        missing_required = []
 
-        score = len(matched_req + matched_opt) / max(len(req_names + opt_names), 1)
+
+        # REQUIRED = heavy weight
+        for ing in r["required_ingredients"]:
+           name = normalize_name(ing["name"])
+           req_amt = ing["amount"]
+           req_unit = ing["unit"]
+
+           available = 0
+
+           for u, qty in have.get(name, {}).items():
+                converted = convert(qty, u, req_unit)
+                if converted is not None:
+                  available += converted
+
+           if available >= req_amt:
+                score += 2
+                matched_required.append(name)
+           else:
+                missing_required.append(name)
+
+
+        # OPTIONAL = lätt vikt
+        for ing in r["optional_ingredients"]:
+            name = normalize_name(ing["name"])
+            if name in have:
+                score += 1
+                matched_optional.append(name)
 
         results.append({
-            "id": r["id"],
-            "title": r["title"],
-            "score": round(score, 3),
-            "matched_required": matched_req,
-            "matched_optional": matched_opt,
-            "missing_required": missing_req,
-            "missing_optional": missing_opt,
-            "instructions": r["instructions"],
-            "required_ingredients": r["required_ingredients"],
-            "optional_ingredients": r["optional_ingredients"],
-            "step_ingredients": r["step_ingredients"]
-        })
+         "id": r["id"],
+         "title": r["title"],
+         "score": round(score / max_score, 3),
+         "matched_required": matched_required,
+         "matched_optional": matched_optional,
+         "missing_required": missing_required,
+         "instructions": r["instructions"],
+         "required_ingredients": scale_ingredients(r["required_ingredients"], portions),
+         "optional_ingredients": scale_ingredients(r["optional_ingredients"], portions),
+         "step_ingredients": [
+            scale_ingredients(step, portions)
+            for step in r["step_ingredients"]
+         ]
+})
+
+
 
     results.sort(key=lambda x: x["score"], reverse=True)
     return results[:top_n]
@@ -233,24 +285,7 @@ HTML_PAGE = r"""
 <html lang="sv">
 <head>
 <meta charset="UTF-8">
-<title>Next Meal+</title>
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<style>
-body {
-  font-family: Arial, sans-serif;
-  margin: 20px;
-  background: #fafafa;
-}
-h1 { color: #2c3e50; }
-/* (… entire CSS … remain intact) */
-</style>
-</head>
-<body>
-<!DOCTYPE html>
-<html lang="sv">
-<head>
-<meta charset="UTF-8">
-<title>Next Meal+</title>
+<title>Next Meal</title>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <style>
 body {
@@ -351,7 +386,7 @@ table.shopping {
 </style>
 </head>
 <body>
-<h1>🍲 Next Meal+</h1>
+<h1>🍲 Next Meal</h1>
 
 <div class="container">
   <div class="section" id="pantrySection">
@@ -403,6 +438,11 @@ table.shopping {
   </div>
 </div>
 
+<label>
+  Portioner:
+  <input type="number" id="portionInput" value="1" min="0.5" step="0.5">
+</label>
+
 <button class="action" onclick="findRecipes()">Hitta recept</button>
 <button class="action" onclick="clearAll()">Rensa allt</button>
 
@@ -410,6 +450,36 @@ table.shopping {
 <div id="results"></div>
 
 <script>
+// ---------------------------
+// Convertion Chart
+// ---------------------------
+const UNIT_MAP = {
+  kg: { base: "g", factor: 1000 },
+  g:  { base: "g", factor: 1 },
+
+  l:  { base: "ml", factor: 1000 },
+  dl: { base: "ml", factor: 100 },
+  ml: { base: "ml", factor: 1 },
+
+  st: { base: "st", factor: 1 }
+};
+
+function normalizeUnitAndQuantity(qty, unit) {
+  const u = UNIT_MAP[unit];
+  if (!u) return { qty, unit }; // unknown unit → leave as-is
+  return {
+    qty: qty * u.factor,
+    unit: u.base
+  };
+}
+function normalizeItem(item) {
+  const n = normalizeUnitAndQuantity(item.quantity, item.unit);
+  return {
+    name: item.name,
+    quantity: n.qty,
+    unit: n.unit
+  };
+}
 
 // ---------------------------
 // GLOBALS
@@ -427,6 +497,16 @@ window.RECIPE_STEP_MAP = {};   // recept-id => step_ingredients[]
 // LOAD & SAVE
 // ---------------------------
 
+function removeItem(area, name, unit) {
+  storageData[area] = storageData[area].filter(
+    item => !(item.name === name && item.unit === unit)
+  );
+
+  saveInputs();
+  renderStorageArea(area);
+}
+
+
 function saveInputs() {
   localStorage.setItem("storageData", JSON.stringify(storageData));
 }
@@ -438,16 +518,18 @@ function loadInputs() {
       const parsed = JSON.parse(raw);
       if (typeof parsed === "object") {
         storageData = {
-          pantry: Array.isArray(parsed.pantry) ? parsed.pantry : [],
-          fridge: Array.isArray(parsed.fridge) ? parsed.fridge : [],
-          freezer: Array.isArray(parsed.freezer) ? parsed.freezer : []
+          pantry: (parsed.pantry || []).map(normalizeItem),
+          fridge: (parsed.fridge || []).map(normalizeItem),
+          freezer: (parsed.freezer || []).map(normalizeItem)
         };
       }
     } catch (e) {
       console.warn("Corrupt localStorage, resetting.");
+      storageData = { pantry: [], fridge: [], freezer: [] };
     }
   }
 
+  saveInputs(); // 🔑 re-save normalized data
   renderStorageArea("pantry");
   renderStorageArea("fridge");
   renderStorageArea("freezer");
@@ -461,12 +543,17 @@ function renderStorageArea(area) {
   const list = document.getElementById(area + "List");
   list.innerHTML = "";
 
+  storageData[area] = storageData[area].map(normalizeItem);
+
   storageData[area].forEach(item => {
     const li = document.createElement("li");
     li.innerHTML = `
       <div class='ingredient-item'>
-        <span>${escapeHtml(item.name)}: <span class="qty-value">${item.quantity}</span> ${escapeHtml(item.unit)}</span>
-        <button class="remove-btn" onclick="removeItem('${area}', '${item.name}')">x</button>
+        <span>${escapeHtml(item.name)}:
+          <span class="qty-value">${item.quantity}</span> ${escapeHtml(item.unit)}
+        </span>
+        <button class="remove-btn"
+          onclick="removeItem('${area}', '${item.name}', '${item.unit}')">x</button>
       </div>`;
     list.appendChild(li);
   });
@@ -481,27 +568,36 @@ function escapeHtml(s) {
 // ---------------------------
 
 function addIngredient(area) {
-  const name = document.getElementById(area + "Input").value.trim().toLowerCase();
-  const qty = parseFloat(document.getElementById(area + "Qty").value);
-  const unit = document.getElementById(area + "Unit").value;
+  let name = document.getElementById(area + "Input").value.trim().toLowerCase();
+  let qty = parseFloat(document.getElementById(area + "Qty").value);
+  let unit = document.getElementById(area + "Unit").value;
 
   if (!name || isNaN(qty) || qty <= 0) {
     alert("Ogiltig ingrediens eller mängd");
     return;
   }
 
-  storageData[area].push({ name, quantity: qty, unit });
+  // 🔑 AUTO UNIT CONVERSION
+  const normalized = normalizeUnitAndQuantity(qty, unit);
+  qty = normalized.qty;
+  unit = normalized.unit;
+
+  // 🔑 MERGE AFTER CONVERSION
+  const existing = storageData[area].find(
+    i => i.name === name && i.unit === unit
+  );
+
+  if (existing) {
+    existing.quantity = Math.round((existing.quantity + qty) * 1000) / 1000;
+  } else {
+    storageData[area].push({ name, quantity: qty, unit });
+  }
+
   saveInputs();
   renderStorageArea(area);
 
   document.getElementById(area + "Input").value = "";
   document.getElementById(area + "Qty").value = "";
-}
-
-function removeItem(area, name) {
-  storageData[area] = storageData[area].filter(i => i.name !== name);
-  saveInputs();
-  renderStorageArea(area);
 }
 
 // ---------------------------
@@ -517,11 +613,23 @@ async function findRecipes() {
     ...storageData.freezer.map(i=>i.name)
   ];
 
-  const res = await fetch("/match", {
-    method: "POST",
-    headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ pantry: collected, leftovers: [], limit: 10 })
-  });
+  const portions = parseFloat(document.getElementById("portionInput").value) || 1;
+
+const res = await fetch("/match", {
+  method: "POST",
+  headers: {"Content-Type":"application/json"},
+  body: JSON.stringify({
+    pantry: [
+      ...storageData.pantry,
+      ...storageData.fridge,
+      ...storageData.freezer
+    ],
+    leftovers: [],
+    limit: 10,
+    portions
+  })
+});
+
 
   const data = await res.json();
   const recipes = data.matches;
@@ -534,6 +642,7 @@ async function findRecipes() {
 
     const div = document.createElement("div");
     div.className = "recipe";
+    div.dataset.recipeId = r.id;
 
     let instrHtml = "<ol>";
     r.instructions.forEach((step, idx) => {
@@ -554,6 +663,22 @@ async function findRecipes() {
       <p>Extra du har: ${r.matched_optional.join(", ") || "–"}</p>
       <button onclick="toggleDetails(${r.id})">Visa detaljer</button>
       <div id="details-${r.id}" class="details">
+
+        <h4>Ingredienser</h4>
+        <p><b>Obligatoriska:</b></p>
+        <ul>
+            ${r.required_ingredients.map(i =>
+                `<li>${escapeHtml(i.name)} ${i.amount} ${escapeHtml(i.unit)}</li>`
+            ).join("")}
+        </ul>
+
+        <p><b>Valfria:</b></p>
+        <ul>
+            ${r.optional_ingredients.map(i =>
+                `<li>${escapeHtml(i.name)} ${i.amount} ${escapeHtml(i.unit)}</li>`
+            ).join("")}
+        </ul>
+
         <h4>Instruktioner</h4>
         ${instrHtml}
 
@@ -575,16 +700,22 @@ function toggleDetails(id) {
 // ---------------------------
 
 async function getShopping(recipeId) {
-  const all = [
-    ...storageData.pantry.map(i=>i.name),
-    ...storageData.fridge.map(i=>i.name),
-    ...storageData.freezer.map(i=>i.name)
+  const allItems = [
+    ...storageData.pantry,
+    ...storageData.fridge,
+    ...storageData.freezer
   ];
 
   const res = await fetch("/shoppinglist", {
     method: "POST",
     headers: {"Content-Type":"application/json"},
-    body: JSON.stringify({ pantry: all, leftovers: [], recipe_id: recipeId })
+    body: JSON.stringify({
+        pantry: allItems,
+        leftovers: [],
+        recipe_id: recipeId,
+        portions: parseFloat(document.getElementById("portionInput").value) || 1
+    })
+
   });
 
   const data = await res.json();
@@ -595,7 +726,7 @@ async function getShopping(recipeId) {
   const opt = data.shopping_list.optional;
 
   if (req.length === 0 && opt.length === 0) {
-    table.innerHTML = "<tr><td>Du har allt!✓</td></tr>";
+    table.innerHTML = "<tr><td>Du har allt! ✓</td></tr>";
     return;
   }
 
@@ -613,6 +744,18 @@ async function getShopping(recipeId) {
     });
   }
 }
+
+document.getElementById("portionInput").addEventListener("change", () => {
+  findRecipes();
+  document.querySelectorAll(".recipe").forEach(recipeEl => {
+    const id = parseInt(recipeEl.dataset.recipeId);
+    if (!isNaN(id)) {
+      getShopping(id);
+    }
+  });
+});
+
+
 
 // ---------------------------
 // STEP CONSUMPTION
@@ -641,9 +784,17 @@ function useIngredients(recipeId, stepIndex, factor) {
 
     ["pantry","fridge","freezer"].forEach(area => {
       storageData[area].forEach(item => {
-        if (normalizeName(item.name) === name && item.unit === unit) {
-          item.quantity = Math.max(0, item.quantity + amount);
+        if (normalizeName(item.name) === name) {
+             const converted = normalizeUnitAndQuantity(amount, unit);
+
+             if (item.unit === converted.unit) {
+                  item.quantity = Math.max(
+                    0,
+                    Math.round((item.quantity + converted.qty) * 1000) / 1000
+                  );
+             }
         }
+
       });
     });
   });
@@ -676,10 +827,6 @@ window.onload = loadInputs;
 </script>
 </body>
 </html>
-
-
-</body>
-</html>
 """
 
 # ============================================================
@@ -694,12 +841,24 @@ def index():
 @app.route("/match", methods=["POST"])
 def match_endpoint():
     data = request.json or {}
+
     pantry = data.get("pantry", [])
     leftovers = data.get("leftovers", [])
     limit = int(data.get("limit", 5))
+    portions = float(data.get("portions", 1))
 
-    matches = match_recipes(pantry, leftovers, top_n=limit)
-    return jsonify({"matches": matches, "total": len(RECIPES)})
+    matches = match_recipes(
+        pantry,
+        leftovers,
+        portions=portions,
+        top_n=limit
+    )
+
+    return jsonify({
+        "matches": matches,
+        "total": len(RECIPES),
+        "portions": portions
+    })
 
 
 @app.route("/shoppinglist", methods=["POST"])
@@ -709,6 +868,8 @@ def shopping():
     leftovers = data.get("leftovers", [])
     recipe_id = data.get("recipe_id")
 
+    portions = float(data.get("portions", 1))
+
     recipe = next((r for r in RECIPES if r["id"] == recipe_id), None)
     if recipe is None:
         return jsonify({"error": "Recipe not found"}), 404
@@ -717,15 +878,27 @@ def shopping():
 
     def compute_missing(ing):
         name = normalize_name(ing["name"])
-        req = float(ing["amount"])
+        required = float(ing["amount"]) * portions
         unit = ing["unit"]
 
-        available = have.get(name, {}).get(unit, 0)
-        missing = req - available
+        available = 0
+        for u, qty in have.get(name, {}).items():
+            converted = convert(qty, u, unit)
+            if converted is not None:
+                available += converted
+
+        missing = round(required - available, 3)
 
         if missing <= 0:
-            return None
-        return {"name": name, "amount": round(missing, 3), "unit": unit}
+          return None
+
+        return {
+            "name": name,
+            "amount": missing,
+            "unit": unit
+        }
+
+
 
     missing_required = []
     missing_optional = []
