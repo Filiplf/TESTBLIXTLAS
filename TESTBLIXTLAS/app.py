@@ -23,7 +23,7 @@ RECIPES = [
         "instructions": [
             "Skär kycklingen i bitar och stek tills den är genomstekt.",
             "Tillsätt hackad lök och morot, fräs i några minuter.",
-            "Knack i ägg och rör om.",
+            "Knäck i ägg och rör om.",
             "Blanda i ris och soja, stek tills allt är varmt."
         ],
         "step_ingredients": [
@@ -37,13 +37,13 @@ RECIPES = [
         "id": 2,
         "title": "Tomat- och linsgryta",
         "required_ingredients": [
-            {"name":"linser","amount":2,"unit":"dl"},
-            {"name":"tomat","amount":400,"unit":"g"}
+            {"name": "linser", "amount": 2, "unit": "dl"},
+            {"name": "tomat", "amount": 400, "unit": "g"}
         ],
         "optional_ingredients": [
-            {"name":"lök","amount":1,"unit":"st"},
-            {"name":"vitlök","amount":2,"unit":"klyfta"},
-            {"name":"spiskummin","amount":1,"unit":"tsk"}
+            {"name": "lök", "amount": 1, "unit": "st"},
+            {"name": "vitlök", "amount": 2, "unit": "klyfta"},
+            {"name": "spiskummin", "amount": 1, "unit": "tsk"}
         ],
         "instructions": [
             "Fräs lök och vitlök i lite olja.",
@@ -51,23 +51,23 @@ RECIPES = [
             "Häll i linser och vatten, låt koka tills linserna är mjuka."
         ],
         "step_ingredients": [
-            [{"name":"lök","amount":1,"unit":"st"}, {"name":"vitlök","amount":2,"unit":"klyfta"}],
-            [{"name":"tomat","amount":400,"unit":"g"}, {"name":"spiskummin","amount":1,"unit":"tsk"}],
-            [{"name":"linser","amount":2,"unit":"dl"}]
+            [{"name": "lök", "amount": 1, "unit": "st"}, {"name": "vitlök", "amount": 2, "unit": "klyfta"}],
+            [{"name": "tomat", "amount": 400, "unit": "g"}, {"name": "spiskummin", "amount": 1, "unit": "tsk"}],
+            [{"name": "linser", "amount": 2, "unit": "dl"}]
         ]
     },
     {
         "id": 3,
         "title": "Pasta med ostsås",
         "required_ingredients": [
-            {"name":"pasta","amount":200,"unit":"g"},
-            {"name":"ost","amount":100,"unit":"g"},
-            {"name":"mjolk","amount":2,"unit":"dl"}
+            {"name": "pasta", "amount": 200, "unit": "g"},
+            {"name": "ost", "amount": 100, "unit": "g"},
+            {"name": "mjölk", "amount": 2, "unit": "dl"}
         ],
         "optional_ingredients": [
-            {"name":"smor","amount":10,"unit":"g"},
-            {"name":"peppar","amount":1,"unit":"tsk"},
-            {"name":"salt","amount":1,"unit":"tsk"}
+            {"name": "smör", "amount": 10, "unit": "g"},
+            {"name": "peppar", "amount": 1, "unit": "tsk"},
+            {"name": "salt", "amount": 1, "unit": "tsk"}
         ],
         "instructions": [
             "Koka pastan enligt anvisningarna.",
@@ -76,8 +76,8 @@ RECIPES = [
             "Blanda med pastan och krydda."
         ],
         "step_ingredients": [
-            [ {"name":"pasta","amount":200,"unit":"g"} ],
-            [ {"name":"smor","amount":10,"unit":"g"}, {"name":"mjolk","amount":2,"unit":"dl"}, {"name":"ost","amount":100,"unit":"g"} ],
+            [{"name": "pasta", "amount": 200, "unit": "g"}],
+            [{"name": "smör", "amount": 10, "unit": "g"}, {"name": "mjölk", "amount": 2, "unit": "dl"}, {"name": "ost", "amount": 100, "unit": "g"}],
             [],
             []
         ]
@@ -86,39 +86,39 @@ RECIPES = [
         "id": 4,
         "title": "Grönsakssoppa",
         "required_ingredients": [
-            {"name":"potatis","amount":3,"unit":"st"},
-            {"name":"morot","amount":2,"unit":"st"},
-            {"name":"vatten","amount":1,"unit":"l"}
+            {"name": "potatis", "amount": 3, "unit": "st"},
+            {"name": "morot", "amount": 2, "unit": "st"},
+            {"name": "vatten", "amount": 1, "unit": "l"}
         ],
         "optional_ingredients": [
-            {"name":"selleri","amount":1,"unit":"st"},
-            {"name":"buljong","amount":1,"unit":"tärning"},
-            {"name":"persilja","amount":1,"unit":"msk"}
+            {"name": "selleri", "amount": 1, "unit": "st"},
+            {"name": "buljong", "amount": 1, "unit": "tärning"},
+            {"name": "persilja", "amount": 1, "unit": "msk"}
         ],
         "instructions": [
-            "Skal och tärna potatis och morot.",
+            "Skala och tärna potatis och morot.",
             "Koka i vatten med buljong.",
             "Tillsätt selleri och låt sjuda tills grönsakerna är mjuka.",
             "Servera med hackad persilja."
         ],
         "step_ingredients": [
-            [ {"name":"potatis","amount":3,"unit":"st"}, {"name":"morot","amount":2,"unit":"st"} ],
-            [ {"name":"vatten","amount":1,"unit":"l"}, {"name":"buljong","amount":1,"unit":"tärning"} ],
-            [ {"name":"selleri","amount":1,"unit":"st"} ],
-            [ {"name":"persilja","amount":1,"unit":"msk"} ]
+            [{"name": "potatis", "amount": 3, "unit": "st"}, {"name": "morot", "amount": 2, "unit": "st"}],
+            [{"name": "vatten", "amount": 1, "unit": "l"}, {"name": "buljong", "amount": 1, "unit": "tärning"}],
+            [{"name": "selleri", "amount": 1, "unit": "st"}],
+            [{"name": "persilja", "amount": 1, "unit": "msk"}]
         ]
     },
     {
         "id": 5,
         "title": "Kycklingwok",
         "required_ingredients": [
-            {"name":"kyckling","amount":250,"unit":"g"},
-            {"name":"gronsaker","amount":300,"unit":"g"}
+            {"name": "kyckling", "amount": 250, "unit": "g"},
+            {"name": "grönsaker", "amount": 300, "unit": "g"}
         ],
         "optional_ingredients": [
-            {"name":"soja","amount":1,"unit":"msk"},
-            {"name":"nudlar","amount":200,"unit":"g"},
-            {"name":"vitlök","amount":1,"unit":"klyfta"}
+            {"name": "soja", "amount": 1, "unit": "msk"},
+            {"name": "nudlar", "amount": 200, "unit": "g"},
+            {"name": "vitlök", "amount": 1, "unit": "klyfta"}
         ],
         "instructions": [
             "Stek kycklingen tills den är gyllenbrun.",
@@ -127,9 +127,9 @@ RECIPES = [
             "Servera genast."
         ],
         "step_ingredients": [
-            [ {"name":"kyckling","amount":250,"unit":"g"} ],
-            [ {"name":"gronsaker","amount":300,"unit":"g"}, {"name":"vitlök","amount":1,"unit":"klyfta"} ],
-            [ {"name":"soja","amount":1,"unit":"msk"}, {"name":"nudlar","amount":200,"unit":"g"} ],
+            [{"name": "kyckling", "amount": 250, "unit": "g"}],
+            [{"name": "grönsaker", "amount": 300, "unit": "g"}, {"name": "vitlök", "amount": 1, "unit": "klyfta"}],
+            [{"name": "soja", "amount": 1, "unit": "msk"}, {"name": "nudlar", "amount": 200, "unit": "g"}],
             []
         ]
     },
@@ -137,12 +137,12 @@ RECIPES = [
         "id": 6,
         "title": "Omelett",
         "required_ingredients": [
-            {"name":"agg","amount":3,"unit":"st"}
+            {"name": "ägg", "amount": 3, "unit": "st"}
         ],
         "optional_ingredients": [
-            {"name":"ost","amount":30,"unit":"g"},
-            {"name":"tomat","amount":1,"unit":"st"},
-            {"name":"skinka","amount":50,"unit":"g"}
+            {"name": "ost", "amount": 30, "unit": "g"},
+            {"name": "tomat", "amount": 1, "unit": "st"},
+            {"name": "skinka", "amount": 50, "unit": "g"}
         ],
         "instructions": [
             "Vispa äggen och krydda.",
@@ -151,10 +151,284 @@ RECIPES = [
             "Vik ihop och servera."
         ],
         "step_ingredients": [
-            [ {"name":"agg","amount":3,"unit":"st"} ],
+            [{"name": "ägg", "amount": 3, "unit": "st"}],
             [],
-            [ {"name":"ost","amount":30,"unit":"g"}, {"name":"tomat","amount":1,"unit":"st"}, {"name":"skinka","amount":50,"unit":"g"} ],
+            [{"name": "ost", "amount": 30, "unit": "g"}, {"name": "tomat", "amount": 1, "unit": "st"}, {"name": "skinka", "amount": 50, "unit": "g"}],
             []
+        ]
+    },
+    {
+        "id": 7,
+        "title": "Macka med kyckling, avokado och mozzarella",
+        "required_ingredients": [
+            {"name": "tomat", "amount": 1, "unit": "st"},
+            {"name": "avokado", "amount": 1, "unit": "st"},
+            {"name": "bröd", "amount": 4, "unit": "skivor"},
+            {"name": "skivad kyckling", "amount": 200, "unit": "g"},
+            {"name": "mozzarella", "amount": 125, "unit": "g"}
+        ],
+        "optional_ingredients": [
+            {"name": "basilikapesto", "amount": 4, "unit": "msk"},
+            {"name": "skivad inlagd jalapeño", "amount": 2, "unit": "msk"},
+            {"name": "tabasco", "amount": 4, "unit": "krm"},
+            {"name": "basilikablad", "amount": 15, "unit": "g"},
+            {"name": "matolja", "amount": 1, "unit": "msk"}
+        ],
+        "instructions": [
+            "Skiva tomaten.",
+            "Gröp ur avokadon och skiva den.",
+            "Skiva mozzarellan.",
+            "Bred basilikapesto på bröden.",
+            "Fördela fyllningen på bröden.",
+            "Droppa tabasco och toppa med basilika.",
+            "Pensla brödet med olja."
+        ],
+        "step_ingredients": [
+            [{"name": "tomat", "amount": 1, "unit": "st"}],
+            [{"name": "avokado", "amount": 1, "unit": "st"}, {"name": "mozzarella", "amount": 125, "unit": "g"}],
+            [{"name": "basilikapesto", "amount": 4, "unit": "msk"}, {"name": "tabasco", "amount": 4, "unit": "krm"}],
+            [{"name": "basilikablad", "amount": 15, "unit": "g"}, {"name": "matolja", "amount": 1, "unit": "msk"}],
+            []
+        ]
+    },
+    {
+        "id": 8,
+        "title": "Linsgryta med kokosmjölk",
+        "required_ingredients": [
+            {"name": "ris", "amount": 200, "unit": "g"},
+            {"name": "kokosmjölk", "amount": 100, "unit": "ml"},
+            {"name": "torkade linser", "amount": 1, "unit": "dl"}
+        ],
+        "optional_ingredients": [
+            {"name": "lök", "amount": 1, "unit": "st"},
+            {"name": "olja", "amount": 1, "unit": "msk"},
+            {"name": "vitlök", "amount": 1, "unit": "st"},
+            {"name": "curry", "amount": 1, "unit": "tsk"},
+            {"name": "tomatpuré", "amount": 1, "unit": "msk"},
+            {"name": "grönsaksbuljongtärning", "amount": 1, "unit": "st"},
+            {"name": "sambal oelek", "amount": 1, "unit": "tsk"},
+            {"name": "körsbärstomater", "amount": 65, "unit": "g"},
+            {"name": "salt", "amount": 1, "unit": "krm"},
+            {"name": "peppar", "amount": 1, "unit": "krm"},
+            {"name": "koriander", "amount": 15, "unit": "g"},
+            {"name": "matyoghurt", "amount": 1, "unit": "dl"}
+        ],
+        "instructions": [
+            "Koka riset enligt anvisning.",
+            "Fräs lök i olja.",
+            "Tillsätt vitlök, curry och tomatpuré.",
+            "Häll i kokosmjölk, linser och kryddor.",
+            "Låt koka tills linserna är mjuka.",
+            "Tillsätt tomater och krydda.",
+            "Servera med ris och yoghurt."
+        ],
+        "step_ingredients": [
+            [{"name": "ris", "amount": 200, "unit": "g"}],
+            [{"name": "lök", "amount": 1, "unit": "st"}, {"name": "olja", "amount": 1, "unit": "msk"}],
+            [{"name": "vitlök", "amount": 1, "unit": "st"}, {"name": "curry", "amount": 1, "unit": "tsk"}, {"name": "tomatpuré", "amount": 1, "unit": "msk"}],
+            [{"name": "kokosmjölk", "amount": 100, "unit": "ml"}, {"name": "torkade linser", "amount": 1, "unit": "dl"}],
+            [{"name": "körsbärstomater", "amount": 65, "unit": "g"}],
+            [{"name": "salt", "amount": 1, "unit": "krm"}, {"name": "peppar", "amount": 1, "unit": "krm"}],
+            [{"name": "matyoghurt", "amount": 1, "unit": "dl"}]
+        ]
+    },
+    {
+        "id": 9,
+        "title": "Korvstroganoff med ris",
+        "required_ingredients": [
+            {"name": "ris", "amount": 200, "unit": "g"},
+            {"name": "falukorv", "amount": 140, "unit": "g"},
+            {"name": "tomatpuré", "amount": 0.75, "unit": "msk"},
+            {"name": "grädde", "amount": 0.5, "unit": "dl"},
+            {"name": "matfett", "amount": 1, "unit": "msk"}
+        ],
+        "optional_ingredients": [
+            {"name": "gul lök", "amount": 0.25, "unit": "st"},
+            {"name": "mjölk", "amount": 0.25, "unit": "dl"},
+            {"name": "senap", "amount": 0.25, "unit": "tsk"}
+        ],
+        "instructions": [
+            "Koka ris.",
+            "Stek korv och lök.",
+            "Tillsätt tomatpuré.",
+            "Rör ner grädde, mjölk och senap.",
+            "Låt sjuda."
+        ],
+        "step_ingredients": [
+            [{"name": "ris", "amount": 200, "unit": "g"}],
+            [{"name": "falukorv", "amount": 140, "unit": "g"}, {"name": "gul lök", "amount": 0.25, "unit": "st"}],
+            [{"name": "tomatpuré", "amount": 0.75, "unit": "msk"}],
+            [{"name": "grädde", "amount": 0.5, "unit": "dl"}, {"name": "mjölk", "amount": 0.25, "unit": "dl"}, {"name": "senap", "amount": 0.25, "unit": "tsk"}]
+        ]
+    },
+    {
+        "id": 10,
+        "title": "Fläskfilégryta med champinjoner och ris",
+        "required_ingredients": [
+            {"name": "fläskfilé", "amount": 125, "unit": "g"},
+            {"name": "ris", "amount": 200, "unit": "g"},
+            {"name": "champinjoner", "amount": 75, "unit": "g"},
+            {"name": "grädde", "amount": 0.75, "unit": "dl"},
+            {"name": "mjölk", "amount": 0.5, "unit": "dl"},
+            {"name": "matfett", "amount": 1, "unit": "msk"}
+        ],
+        "optional_ingredients": [
+            {"name": "gul lök", "amount": 0.25, "unit": "st"},
+            {"name": "tomatpuré", "amount": 0.5, "unit": "tsk"},
+            {"name": "hönsbuljongtärning", "amount": 0.25, "unit": "st"},
+            {"name": "japansk soja", "amount": 0.5, "unit": "msk"},
+            {"name": "senap", "amount": 0.5, "unit": "tsk"}
+        ],
+        "instructions": [
+            "Bryn köttet.",
+            "Stek lök och svamp.",
+            "Tillsätt tomatpuré.",
+            "Häll i grädde och mjölk.",
+            "Smaka av och blanda ihop."
+        ],
+        "step_ingredients": [
+            [{"name": "fläskfilé", "amount": 125, "unit": "g"}],
+            [{"name": "gul lök", "amount": 0.25, "unit": "st"}, {"name": "champinjoner", "amount": 75, "unit": "g"}],
+            [{"name": "grädde", "amount": 0.75, "unit": "dl"}, {"name": "mjölk", "amount": 0.5, "unit": "dl"}]
+        ]
+    },
+    {
+        "id": 11,
+        "title": "Köttfärssås med pasta",
+        "required_ingredients": [
+            {"name": "pasta", "amount": 200, "unit": "g"},
+            {"name": "köttfärs", "amount": 250, "unit": "g"},
+            {"name": "krossade tomater", "amount": 400, "unit": "g"}
+        ],
+        "optional_ingredients": [
+            {"name": "gul lök", "amount": 0.5, "unit": "st"},
+            {"name": "vitlök", "amount": 1, "unit": "klyfta"},
+            {"name": "oregano", "amount": 1, "unit": "tsk"},
+            {"name": "salt", "amount": 1, "unit": "krm"},
+            {"name": "peppar", "amount": 1, "unit": "krm"}
+        ],
+        "instructions": [
+            "Koka pastan enligt anvisning.",
+            "Stek köttfärsen tills den är genomstekt.",
+            "Tillsätt lök och vitlök och fräs.",
+            "Häll i tomater och kryddor.",
+            "Låt sjuda i 10–15 minuter.",
+            "Servera med pasta."
+        ],
+        "step_ingredients": [
+            [{"name": "pasta", "amount": 200, "unit": "g"}],
+            [{"name": "köttfärs", "amount": 250, "unit": "g"}],
+            [{"name": "gul lök", "amount": 0.5, "unit": "st"}, {"name": "vitlök", "amount": 1, "unit": "klyfta"}],
+            [{"name": "krossade tomater", "amount": 400, "unit": "g"}, {"name": "oregano", "amount": 1, "unit": "tsk"}],
+            [{"name": "salt", "amount": 1, "unit": "krm"}, {"name": "peppar", "amount": 1, "unit": "krm"}]
+        ]
+    },
+    {
+        "id": 12,
+        "title": "Pannkakor",
+        "required_ingredients": [
+            {"name": "mjöl", "amount": 2, "unit": "dl"},
+            {"name": "mjölk", "amount": 4, "unit": "dl"},
+            {"name": "ägg", "amount": 2, "unit": "st"}
+        ],
+        "optional_ingredients": [
+            {"name": "salt", "amount": 1, "unit": "krm"},
+            {"name": "smör", "amount": 1, "unit": "msk"}
+        ],
+        "instructions": [
+            "Vispa ihop mjöl, mjölk och ägg.",
+            "Tillsätt salt.",
+            "Stek tunna pannkakor i smör.",
+            "Servera med valfri topping."
+        ],
+        "step_ingredients": [
+            [{"name": "mjöl", "amount": 2, "unit": "dl"}, {"name": "mjölk", "amount": 4, "unit": "dl"}, {"name": "ägg", "amount": 2, "unit": "st"}],
+            [{"name": "salt", "amount": 1, "unit": "krm"}],
+            [{"name": "smör", "amount": 1, "unit": "msk"}],
+            []
+        ]
+    },
+    {
+        "id": 13,
+        "title": "Ugnsrostad potatis med kyckling",
+        "required_ingredients": [
+            {"name": "potatis", "amount": 500, "unit": "g"},
+            {"name": "kyckling", "amount": 300, "unit": "g"}
+        ],
+        "optional_ingredients": [
+            {"name": "olja", "amount": 1, "unit": "msk"},
+            {"name": "salt", "amount": 1, "unit": "tsk"},
+            {"name": "peppar", "amount": 1, "unit": "tsk"},
+            {"name": "paprikapulver", "amount": 1, "unit": "tsk"}
+        ],
+        "instructions": [
+            "Sätt ugnen på 200°C.",
+            "Skär potatis och kyckling i bitar.",
+            "Blanda med olja och kryddor.",
+            "Rosta i ugnen i ca 30–40 minuter.",
+            "Servera varmt."
+        ],
+        "step_ingredients": [
+            [{"name": "potatis", "amount": 500, "unit": "g"}, {"name": "kyckling", "amount": 300, "unit": "g"}],
+            [{"name": "olja", "amount": 1, "unit": "msk"}, {"name": "salt", "amount": 1, "unit": "tsk"}, {"name": "peppar", "amount": 1, "unit": "tsk"}, {"name": "paprikapulver", "amount": 1, "unit": "tsk"}],
+            []
+        ]
+    },
+    {
+        "id": 14,
+        "title": "Tacos",
+        "required_ingredients": [
+            {"name": "tacobröd", "amount": 4, "unit": "st"},
+            {"name": "köttfärs", "amount": 300, "unit": "g"}
+        ],
+        "optional_ingredients": [
+            {"name": "tacokrydda", "amount": 1, "unit": "påse"},
+            {"name": "sallad", "amount": 100, "unit": "g"},
+            {"name": "tomat", "amount": 2, "unit": "st"},
+            {"name": "ost", "amount": 100, "unit": "g"},
+            {"name": "gräddfil", "amount": 2, "unit": "dl"}
+        ],
+        "instructions": [
+            "Stek köttfärsen.",
+            "Tillsätt tacokrydda och lite vatten.",
+            "Hacka grönsaker.",
+            "Fyll bröden med kött och tillbehör.",
+            "Servera direkt."
+        ],
+        "step_ingredients": [
+            [{"name": "köttfärs", "amount": 300, "unit": "g"}],
+            [{"name": "tacokrydda", "amount": 1, "unit": "påse"}],
+            [{"name": "sallad", "amount": 100, "unit": "g"}, {"name": "tomat", "amount": 2, "unit": "st"}],
+            [{"name": "tacobröd", "amount": 4, "unit": "st"}, {"name": "ost", "amount": 100, "unit": "g"}, {"name": "gräddfil", "amount": 2, "unit": "dl"}]
+        ]
+    },
+    {
+        "id": 15,
+        "title": "Fisk i ugn med potatis",
+        "required_ingredients": [
+            {"name": "vit fisk", "amount": 300, "unit": "g"},
+            {"name": "potatis", "amount": 400, "unit": "g"}
+        ],
+        "optional_ingredients": [
+            {"name": "citron", "amount": 0.5, "unit": "st"},
+            {"name": "smör", "amount": 1, "unit": "msk"},
+            {"name": "dill", "amount": 10, "unit": "g"},
+            {"name": "salt", "amount": 1, "unit": "tsk"},
+            {"name": "peppar", "amount": 1, "unit": "tsk"}
+        ],
+        "instructions": [
+            "Sätt ugnen på 200°C.",
+            "Skala och koka potatisen.",
+            "Lägg fisken i en ugnsform.",
+            "Krydda och klicka på smör.",
+            "Baka i ugnen i ca 20 minuter.",
+            "Servera med potatis och dill."
+        ],
+        "step_ingredients": [
+            [{"name": "potatis", "amount": 400, "unit": "g"}],
+            [{"name": "vit fisk", "amount": 300, "unit": "g"}],
+            [{"name": "citron", "amount": 0.5, "unit": "st"}, {"name": "smör", "amount": 1, "unit": "msk"}],
+            [{"name": "dill", "amount": 10, "unit": "g"}, {"name": "salt", "amount": 1, "unit": "tsk"}, {"name": "peppar", "amount": 1, "unit": "tsk"}]
         ]
     }
 ]
@@ -293,7 +567,7 @@ def match_recipes(pantry, leftovers, portions=1, top_n=5):
 
 
     results.sort(key=lambda x: x["score"], reverse=True)
-    return results[:top_n]
+    return results
 
 # ============================================================
 # FRONTEND HTML (YOUR HUGE DOCUMENT)
@@ -651,7 +925,7 @@ const res = await fetch("/match", {
       ...storageData.freezer
     ],
     leftovers: [],
-    limit: 10,
+    limit: 100,
     portions
   })
 });
@@ -1045,7 +1319,7 @@ def match_endpoint():
 
     pantry = data.get("pantry", [])
     leftovers = data.get("leftovers", [])
-    limit = int(data.get("limit", 5))
+    limit = int(data.get("limit", len(RECIPES)))
     portions = float(data.get("portions", 1))
 
     matches = match_recipes(
