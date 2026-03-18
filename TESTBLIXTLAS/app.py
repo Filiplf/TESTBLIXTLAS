@@ -191,6 +191,22 @@ def scale_ingredients(ings, factor):
 def normalize_name(n):
     return n.strip().lower()
 
+BASE_UNITS = {
+    "kg": ("g", 1000),
+    "g": ("g", 1),
+    "l": ("ml", 1000),
+    "dl": ("ml", 100),
+    "ml": ("ml", 1),
+    "st": ("st", 1)
+}
+
+def normalize_unit(amount, unit):
+    if unit not in BASE_UNITS:
+        return amount, unit
+    base, factor = BASE_UNITS[unit]
+    return amount * factor, base
+
+
 def gather_have_quantities(pantry_list):
     have = {}
 
@@ -199,15 +215,18 @@ def gather_have_quantities(pantry_list):
             continue
 
         name = normalize_name(item.get("name", ""))
+
         try:
             qty = float(item.get("quantity", 0))
-        except (TypeError, ValueError):
+        except:
             qty = 0
 
-        unit = item.get("unit", "") or ""
+        unit = item.get("unit", "")
 
         if qty <= 0 or not name:
             continue
+
+        qty, unit = normalize_unit(qty, unit)
 
         have.setdefault(name, {})
         have[name][unit] = have[name].get(unit, 0) + qty
@@ -447,6 +466,13 @@ table.shopping {
 <button class="action" onclick="clearAll()">Rensa allt</button>
 
 <h2>Förslag:</h2>
+<div class="section">
+  <h2>🗓️ Måltidsplan</h2>
+  <ul id="mealPlanList"></ul>
+  <button class="action" onclick="generateMealPlanShopping()">🛒 Generera inköpslista</button>
+  <h3>🧾 Samlad inköpslista</h3>
+  <ul id="mealPlanShopping"></ul>
+</div>
 <div id="results"></div>
 
 <script>
@@ -662,6 +688,7 @@ const res = await fetch("/match", {
       <p>Obligatoriska du har: ${r.matched_required.join(", ") || "–"}</p>
       <p>Extra du har: ${r.matched_optional.join(", ") || "–"}</p>
       <button onclick="toggleDetails(${r.id})">Visa detaljer</button>
+      <button onclick="addToMealPlan(${r.id})">➕ Lägg till i plan</button>
       <div id="details-${r.id}" class="details">
 
         <h4>Ingredienser</h4>
@@ -693,6 +720,96 @@ const res = await fetch("/match", {
 
 function toggleDetails(id) {
   document.getElementById("details-" + id).classList.toggle("open");
+}
+
+
+
+// ---------------------------
+// MEAL PLAN
+// ---------------------------
+
+let mealPlan = [];
+
+function addToMealPlan(recipeId) {
+  const portions = parseFloat(document.getElementById("portionInput").value) || 1;
+
+  mealPlan.push({ recipeId, portions });
+  renderMealPlan();
+}
+
+function removeFromMealPlan(index) {
+  mealPlan.splice(index, 1);
+  renderMealPlan();
+}
+
+function renderMealPlan() {
+  const list = document.getElementById("mealPlanList");
+  list.innerHTML = "";
+
+  mealPlan.forEach((item, i) => {
+    const li = document.createElement("li");
+
+    const recipe = document.querySelector(`[data-recipe-id='${item.recipeId}'] h3`)?.innerText || "Recept";
+
+    li.innerHTML = `
+      ${recipe} (${item.portions} portioner)
+      <button onclick="removeFromMealPlan(${i})">❌</button>
+    `;
+
+    list.appendChild(li);
+  });
+}
+
+// ---------------------------
+// COMBINED SHOPPING LIST
+// ---------------------------
+
+async function generateMealPlanShopping() {
+  const allItems = [
+    ...storageData.pantry,
+    ...storageData.fridge,
+    ...storageData.freezer
+  ];
+
+  const res = await fetch("/mealplan", {
+    method: "POST",
+    headers: {"Content-Type":"application/json"},
+    body: JSON.stringify({
+      pantry: allItems,
+      meal_plan: mealPlan
+    })
+  });
+
+  const data = await res.json();
+
+  const list = document.getElementById("mealPlanShopping");
+  list.innerHTML = "";
+
+  if (!data.shopping_list.length) {
+    list.innerHTML = "<li>Du har allt! 🎉</li>";
+    return;
+  }
+
+  data.shopping_list.forEach((item, index) => {
+  const li = document.createElement("li");
+
+  const key = `mealplan-item-${index}`;
+  const checked = localStorage.getItem(key) === "true" ? "checked" : "";
+
+  li.innerHTML = `
+    <label>
+      <input type="checkbox" ${checked}
+        onchange="toggleShoppingItem(this, '${key}')">
+      <span class="${checked ? 'done' : ''}">${item}</span>
+    </label>
+
+    <button onclick="addShoppingTo('pantry', '${item}')">🥫</button>
+    <button onclick="addShoppingTo('fridge', '${item}')">❄️</button>
+    <button onclick="addShoppingTo('freezer', '${item}')">🧊</button>
+  `;
+
+  list.appendChild(li);
+});
 }
 
 // ---------------------------
@@ -732,9 +849,28 @@ async function getShopping(recipeId) {
 
   if (req.length) {
     table.innerHTML += `<tr><td><b>Obligatoriskt:</b></td></tr>`;
-    req.forEach(i => {
-      table.innerHTML += `<tr><td>${escapeHtml(i)}</td></tr>`;
-    });
+    req.forEach((item, index) => {
+  const key = `recipe-${recipeId}-item-${index}`;
+  const checked = localStorage.getItem(key) === "true" ? "checked" : "";
+
+  table.innerHTML += `
+    <tr>
+      <td>
+        <label>
+          <input type="checkbox" ${checked}
+            onchange="toggleShoppingItem(this, '${key}')">
+          <span class="${checked ? 'done' : ''}">
+            ${escapeHtml(item)}
+          </span>
+        </label>
+
+        <button onclick="addShoppingTo('pantry', '${item}')">🥫</button>
+        <button onclick="addShoppingTo('fridge', '${item}')">❄️</button>
+        <button onclick="addShoppingTo('freezer', '${item}')">🧊</button>
+      </td>
+    </tr>
+  `;
+});
   }
 
   if (opt.length) {
@@ -804,6 +940,71 @@ function useIngredients(recipeId, stepIndex, factor) {
   renderStorageArea("fridge");
   renderStorageArea("freezer");
 }
+
+// ---------------------------
+// SHOPPING INTERACTION
+// ---------------------------
+
+function toggleShoppingItem(checkbox, key) {
+  const span = checkbox.nextElementSibling;
+
+  if (checkbox.checked) {
+    span.classList.add("done");
+    localStorage.setItem(key, "true");
+  } else {
+    span.classList.remove("done");
+    localStorage.setItem(key, "false");
+  }
+}
+
+// Convert "mjölk 2 dl" → {name, qty, unit}
+function parseShoppingItem(text) {
+  const parts = text.split(" ");
+
+  if (parts.length < 3) {
+    return null;
+  }
+
+  const name = parts[0];
+  const qty = parseFloat(parts[1]);
+  const unit = parts[2];
+
+  if (isNaN(qty)) return null;
+
+  return { name, quantity: qty, unit };
+}
+
+function addShoppingTo(area, itemText) {
+  const parsed = parseShoppingItem(itemText);
+
+  if (!parsed) {
+    alert("Kunde inte tolka varan ❗");
+    return;
+  }
+
+  const normalized = normalizeUnitAndQuantity(parsed.quantity, parsed.unit);
+
+  const existing = storageData[area].find(
+    i => i.name === parsed.name && i.unit === normalized.unit
+  );
+
+  if (existing) {
+    existing.quantity += normalized.qty;
+  } else {
+    storageData[area].push({
+      name: parsed.name,
+      quantity: normalized.qty,
+      unit: normalized.unit
+    });
+  }
+
+  saveInputs();
+  renderStorageArea(area);
+}
+
+
+
+
 
 // ---------------------------
 // CLEAR ALL
@@ -923,6 +1124,52 @@ def shopping():
     }
 })
 
+@app.route("/mealplan", methods=["POST"])
+def mealplan():
+    data = request.json or {}
+
+    pantry = data.get("pantry", [])
+    meal_plan = data.get("meal_plan", [])
+
+    have = gather_have_quantities(pantry)
+
+    combined_needed = {}
+
+    for entry in meal_plan:
+        recipe_id = entry.get("recipeId")
+        portions = float(entry.get("portions", 1))
+
+        recipe = next((r for r in RECIPES if r["id"] == recipe_id), None)
+        if not recipe:
+            continue
+
+        for ing in recipe["required_ingredients"]:
+            name = normalize_name(ing["name"])
+            required = ing["amount"] * portions
+            unit = ing["unit"]
+
+            # Calculate available
+            available = 0
+            for u, qty in have.get(name, {}).items():
+                converted = convert(qty, u, unit)
+                if converted:
+                    available += converted
+
+            missing = max(required - available, 0)
+
+            if missing > 0:
+                key = (name, unit)
+                combined_needed[key] = combined_needed.get(key, 0) + missing
+
+    # Format output
+    shopping_list = [
+        f"{name} {round(amount,2)} {unit}"
+        for (name, unit), amount in combined_needed.items()
+    ]
+
+    return jsonify({
+        "shopping_list": shopping_list
+    })
 
 
 # ============================================================
