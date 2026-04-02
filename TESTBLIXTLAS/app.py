@@ -521,7 +521,7 @@ def match_recipes(pantry, leftovers, portions=1, top_n=5):
         missing_required = []
 
 
-        # REQUIRED = heavy weight
+        # REQUIRED = tung vikt
         for ing in r["required_ingredients"]:
            name = normalize_name(ing["name"])
            req_amt = ing["amount"]
@@ -570,7 +570,7 @@ def match_recipes(pantry, leftovers, portions=1, top_n=5):
     return results
 
 # ============================================================
-# FRONTEND HTML (YOUR HUGE DOCUMENT)
+# FRONTEND HTML 
 # ============================================================
 
 HTML_PAGE = r"""
